@@ -1,0 +1,41 @@
+<div class="card">
+    <img class="card-image" src="@ImageUrl" alt="@Alt" />
+    <div class="card-content">
+        <span class="card-badge @BadgeClass">@Category</span>
+        <h3>@Title</h3>
+        <p>@Description</p>
+        <div class="card-footer">
+            <span class="card-date">@Date</span>
+            <a href="@Link" class="card-link">@LinkText →</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ImageUrl { get; set; } = "";
+    
+    [Parameter]
+    public string Alt { get; set; } = "";
+    
+    [Parameter]
+    public string Category { get; set; } = "";
+    
+    [Parameter]
+    public string BadgeClass { get; set; } = "news";
+    
+    [Parameter]
+    public string Title { get; set; } = "";
+    
+    [Parameter]
+    public string Description { get; set; } = "";
+    
+    [Parameter]
+    public string Date { get; set; } = "";
+    
+    [Parameter]
+    public string Link { get; set; } = "#";
+    
+    [Parameter]
+    public string LinkText { get; set; } = "Read More";
+}
