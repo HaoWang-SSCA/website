@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+  },
+  "ConnectionStrings": {
+    "PostgreSQL": "Host=localhost;Database=ssca;Username=postgres;Password=YOUR_PASSWORD",
+    "AzureStorage": "UseDevelopmentStorage=true"
+  },
+  "AzureStorage": {
+    "BaseUrl": "http://127.0.0.1:10000/devstoreaccount1"
+  }
+}

@@ -1,0 +1,300 @@
+@page "/admin/meetings/new"
+@page "/admin/meetings/{Id:guid}"
+@using SSCA.website.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <div>
+                <h1 class="page-title">@(IsNew ? "新增讲道信息" : "编辑讲道信息")</h1>
+                <p class="page-subtitle">@(IsNew ? "Create New Meeting" : "Edit Meeting")</p>
+            </div>
+            <button class="btn btn-secondary" @onclick="GoBack">
+                <span class="material-symbols-outlined">arrow_back</span>
+                返回 Back
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading">
+                <span class="material-symbols-outlined spinning">progress_activity</span>
+                <p>Loading...</p>
+            </div>
+        }
+        else
+        {
+            <div class="form-card">
+                <EditForm Model="@model" OnValidSubmit="SaveMeeting">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="date">信息日期 Date *</label>
+                            <InputDate id="date" @bind-Value="model.Date" class="form-control" />
+                            <ValidationMessage For="@(() => model.Date)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="speaker">讲员 Speaker *</label>
+                            <InputText id="speaker" @bind-Value="model.Speaker" class="form-control" placeholder="Enter speaker name" />
+                            <ValidationMessage For="@(() => model.Speaker)" />
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="topic">信息主题 Topic *</label>
+                            <InputText id="topic" @bind-Value="model.Topic" class="form-control" placeholder="Enter message topic" />
+                            <ValidationMessage For="@(() => model.Topic)" />
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="videoUrl">视频链接 Video URL</label>
+                            <InputText id="videoUrl" @bind-Value="model.VideoUrl" class="form-control" placeholder="https://youtube.com/..." />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <InputCheckbox @bind-Value="model.IsGospel" />
+                                <span>福音信息 Gospel Message</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <InputCheckbox @bind-Value="model.IsSpecialMeeting" />
+                                <span>特别聚会 Special Meeting</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (!IsNew && existingMeeting != null)
+                    {
+                        <div class="audio-section">
+                            <h3>音频文件 Audio File</h3>
+                            @if (!string.IsNullOrEmpty(existingMeeting.AudioUrl))
+                            {
+                                <div class="current-audio">
+                                    <span class="material-symbols-outlined">headphones</span>
+                                    <a href="@existingMeeting.AudioUrl" target="_blank">当前音频 Current Audio</a>
+                                </div>
+                            }
+                            <div class="form-group">
+                                <label for="audioFile">上传新音频 Upload New Audio</label>
+                                <InputFile id="audioFile" OnChange="HandleAudioUpload" accept=".mp3,.wav,.m4a,.ogg" />
+                                @if (isUploading)
+                                {
+                                    <div class="upload-progress">
+                                        <span class="material-symbols-outlined spinning">progress_activity</span>
+                                        <span>上传中... Uploading...</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(uploadMessage))
+                                {
+                                    <div class="upload-message @(uploadSuccess ? "success" : "error")">
+                                        @uploadMessage
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-error">
+                            <span class="material-symbols-outlined">error</span>
+                            @errorMessage
+                        </div>
+                    }
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" @onclick="GoBack">取消 Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="material-symbols-outlined spinning">progress_activity</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined">save</span>
+                            }
+                            保存 Save
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private bool IsNew => !Id.HasValue;
+    private MeetingFormModel model = new();
+    private MessageMeetingDto? existingMeeting;
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool isUploading;
+    private string? errorMessage;
+    private string? uploadMessage;
+    private bool uploadSuccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            await LoadMeeting();
+        }
+        else
+        {
+            model.Date = DateTime.Today;
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadMeeting()
+    {
+        try
+        {
+            existingMeeting = await Http.GetFromJsonAsync<MessageMeetingDto>($"api/meetings/{Id}");
+            if (existingMeeting != null)
+            {
+                model = new MeetingFormModel
+                {
+                    Date = existingMeeting.Date,
+                    Speaker = existingMeeting.Speaker,
+                    Topic = existingMeeting.Topic,
+                    VideoUrl = existingMeeting.VideoUrl,
+                    IsGospel = existingMeeting.IsGospel,
+                    IsSpecialMeeting = existingMeeting.IsSpecialMeeting
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load meeting: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveMeeting()
+    {
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            if (IsNew)
+            {
+                var createRequest = new CreateMeetingRequest
+                {
+                    Date = model.Date,
+                    Speaker = model.Speaker,
+                    Topic = model.Topic,
+                    VideoUrl = model.VideoUrl,
+                    IsGospel = model.IsGospel,
+                    IsSpecialMeeting = model.IsSpecialMeeting
+                };
+                response = await Http.PostAsJsonAsync("api/admin/meetings", createRequest);
+            }
+            else
+            {
+                var updateRequest = new UpdateMeetingRequest
+                {
+                    Id = Id!.Value,
+                    Date = model.Date,
+                    Speaker = model.Speaker,
+                    Topic = model.Topic,
+                    VideoUrl = model.VideoUrl,
+                    IsGospel = model.IsGospel,
+                    IsSpecialMeeting = model.IsSpecialMeeting
+                };
+                response = await Http.PutAsJsonAsync($"api/admin/meetings/{Id}", updateRequest);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/admin/meetings");
+            }
+            else
+            {
+                errorMessage = $"Failed to save: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving meeting: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task HandleAudioUpload(InputFileChangeEventArgs e)
+    {
+        if (IsNew || !Id.HasValue) return;
+
+        var file = e.File;
+        if (file == null) return;
+
+        isUploading = true;
+        uploadMessage = null;
+
+        try
+        {
+            // Max 50MB
+            var maxSize = 50 * 1024 * 1024;
+            using var content = new MultipartFormDataContent();
+            using var stream = file.OpenReadStream(maxSize);
+            using var streamContent = new StreamContent(stream);
+            content.Add(streamContent, "file", file.Name);
+
+            var response = await Http.PostAsync($"api/admin/meetings/{Id}/audio", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                uploadSuccess = true;
+                uploadMessage = "上传成功! Upload successful!";
+                await LoadMeeting(); // Refresh to show new audio URL
+            }
+            else
+            {
+                uploadSuccess = false;
+                uploadMessage = $"上传失败: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            uploadSuccess = false;
+            uploadMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/meetings");
+    }
+
+    private class MeetingFormModel
+    {
+        public DateTime Date { get; set; } = DateTime.Today;
+        public string Speaker { get; set; } = string.Empty;
+        public string Topic { get; set; } = string.Empty;
+        public string? VideoUrl { get; set; }
+        public bool IsGospel { get; set; }
+        public bool IsSpecialMeeting { get; set; }
+    }
+}

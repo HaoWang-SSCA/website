@@ -1,0 +1,188 @@
+@page "/special-meetings"
+@using SSCA.website.Shared.Models
+@inject HttpClient Http
+
+<div class="meetings-page special-page">
+    <div class="container">
+        <h1 class="page-title">特别聚会</h1>
+        <p class="page-subtitle">Special Meetings</p>
+
+        <!-- Search/Filter Section -->
+        <div class="search-section">
+            <div class="search-form">
+                <div class="search-row">
+                    <div class="form-group">
+                        <label for="speaker">讲员 Speaker</label>
+                        <input type="text" id="speaker" @bind="searchSpeaker" @bind:event="oninput" placeholder="Search by speaker..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="topic">主题 Topic</label>
+                        <input type="text" id="topic" @bind="searchTopic" @bind:event="oninput" placeholder="Search by topic..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="dateFrom">开始日期 From</label>
+                        <input type="date" id="dateFrom" @bind="dateFrom" />
+                    </div>
+                    <div class="form-group">
+                        <label for="dateTo">结束日期 To</label>
+                        <input type="date" id="dateTo" @bind="dateTo" />
+                    </div>
+                </div>
+                <div class="search-actions">
+                    <button class="btn btn-primary" @onclick="SearchMeetings">搜索 Search</button>
+                    <button class="btn btn-secondary" @onclick="ClearSearch">清除 Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meetings List -->
+        @if (isLoading)
+        {
+            <div class="loading">
+                <span class="material-symbols-outlined spinning">progress_activity</span>
+                <p>Loading...</p>
+            </div>
+        }
+        else if (meetings?.Items?.Count > 0)
+        {
+            <div class="meetings-grid">
+                @foreach (var meeting in meetings.Items)
+                {
+                    <div class="meeting-card special-card">
+                        <div class="meeting-badge special">特别</div>
+                        <div class="meeting-date">
+                            <span class="day">@meeting.Date.Day</span>
+                            <span class="month">@meeting.Date.ToString("MMM yyyy")</span>
+                        </div>
+                        <div class="meeting-content">
+                            <h3 class="meeting-topic">@meeting.Topic</h3>
+                            <p class="meeting-speaker">
+                                <span class="material-symbols-outlined">person</span>
+                                @meeting.Speaker
+                            </p>
+                            <div class="meeting-actions">
+                                @if (!string.IsNullOrEmpty(meeting.AudioUrl))
+                                {
+                                    <a href="@meeting.AudioUrl" target="_blank" class="btn btn-sm btn-outline">
+                                        <span class="material-symbols-outlined">headphones</span>
+                                        音频
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(meeting.VideoUrl))
+                                {
+                                    <a href="@meeting.VideoUrl" target="_blank" class="btn btn-sm btn-outline">
+                                        <span class="material-symbols-outlined">play_circle</span>
+                                        视频
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (meetings.TotalPages > 1)
+            {
+                <div class="pagination">
+                    <button class="btn btn-sm" disabled="@(!meetings.HasPreviousPage)" @onclick="PreviousPage">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <span class="page-info">Page @meetings.Page of @meetings.TotalPages</span>
+                    <button class="btn btn-sm" disabled="@(!meetings.HasNextPage)" @onclick="NextPage">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-results">
+                <span class="material-symbols-outlined">search_off</span>
+                <p>暂无信息 No messages found</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private PagedResult<MessageMeetingDto>? meetings;
+    private bool isLoading = true;
+    private int currentPage = 1;
+    private string? searchSpeaker;
+    private string? searchTopic;
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMeetings();
+    }
+
+    private async Task LoadMeetings()
+    {
+        isLoading = true;
+        try
+        {
+            var query = BuildQueryString();
+            meetings = await Http.GetFromJsonAsync<PagedResult<MessageMeetingDto>>($"api/meetings/special{query}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading meetings: {ex.Message}");
+            meetings = new PagedResult<MessageMeetingDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string BuildQueryString()
+    {
+        var queryParams = new List<string> { $"page={currentPage}", "pageSize=10" };
+        if (!string.IsNullOrWhiteSpace(searchSpeaker))
+            queryParams.Add($"speaker={Uri.EscapeDataString(searchSpeaker)}");
+        if (!string.IsNullOrWhiteSpace(searchTopic))
+            queryParams.Add($"topic={Uri.EscapeDataString(searchTopic)}");
+        if (dateFrom.HasValue)
+            queryParams.Add($"dateFrom={dateFrom.Value:yyyy-MM-dd}");
+        if (dateTo.HasValue)
+            queryParams.Add($"dateTo={dateTo.Value:yyyy-MM-dd}");
+        return "?" + string.Join("&", queryParams);
+    }
+
+    private async Task SearchMeetings()
+    {
+        currentPage = 1;
+        await LoadMeetings();
+    }
+
+    private async Task ClearSearch()
+    {
+        searchSpeaker = null;
+        searchTopic = null;
+        dateFrom = null;
+        dateTo = null;
+        currentPage = 1;
+        await LoadMeetings();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadMeetings();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (meetings?.HasNextPage == true)
+        {
+            currentPage++;
+            await LoadMeetings();
+        }
+    }
+}

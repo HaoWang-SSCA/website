@@ -1,0 +1,261 @@
+@page "/admin/meetings"
+@using SSCA.website.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <div>
+                <h1 class="page-title">管理讲道信息</h1>
+                <p class="page-subtitle">Manage Message Meetings</p>
+            </div>
+            <button class="btn btn-primary" @onclick="CreateNew">
+                <span class="material-symbols-outlined">add</span>
+                新增 Add New
+            </button>
+        </div>
+
+        <!-- Search/Filter -->
+        <div class="search-section">
+            <div class="search-row">
+                <div class="form-group">
+                    <input type="text" @bind="searchSpeaker" @bind:event="oninput" placeholder="Search speaker..." />
+                </div>
+                <div class="form-group">
+                    <input type="text" @bind="searchTopic" @bind:event="oninput" placeholder="Search topic..." />
+                </div>
+                <div class="search-actions">
+                    <button class="btn btn-primary btn-sm" @onclick="SearchMeetings">搜索</button>
+                    <button class="btn btn-secondary btn-sm" @onclick="ClearSearch">清除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meetings Table -->
+        @if (isLoading)
+        {
+            <div class="loading">
+                <span class="material-symbols-outlined spinning">progress_activity</span>
+                <p>Loading...</p>
+            </div>
+        }
+        else if (meetings?.Items?.Count > 0)
+        {
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>日期 Date</th>
+                            <th>讲员 Speaker</th>
+                            <th>主题 Topic</th>
+                            <th>类型 Type</th>
+                            <th>媒体 Media</th>
+                            <th>操作 Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var meeting in meetings.Items)
+                        {
+                            <tr>
+                                <td>@meeting.Date.ToString("yyyy-MM-dd")</td>
+                                <td>@meeting.Speaker</td>
+                                <td class="topic-cell">@meeting.Topic</td>
+                                <td>
+                                    @if (meeting.IsGospel)
+                                    {
+                                        <span class="badge badge-gospel">福音</span>
+                                    }
+                                    else if (meeting.IsSpecialMeeting)
+                                    {
+                                        <span class="badge badge-special">特别</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-regular">主日</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(meeting.AudioUrl))
+                                    {
+                                        <span class="material-symbols-outlined media-icon" title="Has Audio">headphones</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(meeting.VideoUrl))
+                                    {
+                                        <span class="material-symbols-outlined media-icon" title="Has Video">play_circle</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-outline" @onclick="() => EditMeeting(meeting.Id)">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(meeting)">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (meetings.TotalPages > 1)
+            {
+                <div class="pagination">
+                    <button class="btn btn-sm" disabled="@(!meetings.HasPreviousPage)" @onclick="PreviousPage">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <span class="page-info">Page @meetings.Page of @meetings.TotalPages (@meetings.TotalCount total)</span>
+                    <button class="btn btn-sm" disabled="@(!meetings.HasNextPage)" @onclick="NextPage">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-results">
+                <span class="material-symbols-outlined">inbox</span>
+                <p>暂无信息 No meetings found</p>
+                <button class="btn btn-primary" @onclick="CreateNew">创建第一条 Create First Meeting</button>
+            </div>
+        }
+
+        <!-- Delete Confirmation Modal -->
+        @if (showDeleteConfirm && meetingToDelete != null)
+        {
+            <div class="modal-overlay" @onclick="CancelDelete">
+                <div class="modal" @onclick:stopPropagation="true">
+                    <h3>确认删除 Confirm Delete</h3>
+                    <p>确定要删除 "@meetingToDelete.Topic" 吗？</p>
+                    <p class="text-secondary">此操作无法撤销。</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" @onclick="CancelDelete">取消 Cancel</button>
+                        <button class="btn btn-danger" @onclick="DeleteMeeting">删除 Delete</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private PagedResult<MessageMeetingDto>? meetings;
+    private bool isLoading = true;
+    private int currentPage = 1;
+    private string? searchSpeaker;
+    private string? searchTopic;
+    private bool showDeleteConfirm;
+    private MessageMeetingDto? meetingToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMeetings();
+    }
+
+    private async Task LoadMeetings()
+    {
+        isLoading = true;
+        try
+        {
+            var query = BuildQueryString();
+            meetings = await Http.GetFromJsonAsync<PagedResult<MessageMeetingDto>>($"api/admin/meetings{query}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading meetings: {ex.Message}");
+            meetings = new PagedResult<MessageMeetingDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string BuildQueryString()
+    {
+        var queryParams = new List<string> { $"page={currentPage}", "pageSize=15" };
+        if (!string.IsNullOrWhiteSpace(searchSpeaker))
+            queryParams.Add($"speaker={Uri.EscapeDataString(searchSpeaker)}");
+        if (!string.IsNullOrWhiteSpace(searchTopic))
+            queryParams.Add($"topic={Uri.EscapeDataString(searchTopic)}");
+        return "?" + string.Join("&", queryParams);
+    }
+
+    private async Task SearchMeetings()
+    {
+        currentPage = 1;
+        await LoadMeetings();
+    }
+
+    private async Task ClearSearch()
+    {
+        searchSpeaker = null;
+        searchTopic = null;
+        currentPage = 1;
+        await LoadMeetings();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadMeetings();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (meetings?.HasNextPage == true)
+        {
+            currentPage++;
+            await LoadMeetings();
+        }
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/admin/meetings/new");
+    }
+
+    private void EditMeeting(Guid id)
+    {
+        Navigation.NavigateTo($"/admin/meetings/{id}");
+    }
+
+    private void ConfirmDelete(MessageMeetingDto meeting)
+    {
+        meetingToDelete = meeting;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        meetingToDelete = null;
+        showDeleteConfirm = false;
+    }
+
+    private async Task DeleteMeeting()
+    {
+        if (meetingToDelete == null) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/admin/meetings/{meetingToDelete.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                showDeleteConfirm = false;
+                meetingToDelete = null;
+                await LoadMeetings();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting meeting: {ex.Message}");
+        }
+    }
+}
