@@ -1,0 +1,31 @@
+# Production Environment Configuration
+# Copy this file to terraform.tfvars and update values
+
+project_name        = "ssca-bc"
+environment         = "prod"
+location            = "westus2"  # Supported: westus2, centralus, eastus2, westeurope, eastasia
+resource_group_name = "ssca-bc-website-rg"
+
+# PostgreSQL
+postgres_sku            = "B_Standard_B1ms"  # Burstable tier, cost-effective
+postgres_storage_mb     = 32768              # 32 GB
+postgres_version        = "16"
+postgres_admin_username = "sscaadmin"
+# postgres_admin_password = "YOUR_SECURE_PASSWORD"  # Set via environment variable TF_VAR_postgres_admin_password
+
+# Storage
+storage_account_tier     = "Standard"
+storage_replication_type = "LRS"
+
+# Static Web App
+static_web_app_sku = "Free"  # Use "Standard" for production with custom domains
+github_repo_url    = "https://github.com/HaoWang-SSCA/website"
+github_branch      = "main"
+
+# Tags
+tags = {
+  Project     = "SSCA-BC Website"
+  Environment = "Production"
+  ManagedBy   = "Terraform"
+  Owner       = "SSCA-BC"
+}

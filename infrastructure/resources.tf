@@ -1,0 +1,93 @@
+# Resource Group
+resource "azurerm_resource_group" "main" {
+  name     = var.resource_group_name
+  location = var.location
+  tags     = var.tags
+}
+
+# Random suffix for globally unique names
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
+# ============================================
+# Azure Static Web App
+# ============================================
+resource "azurerm_static_web_app" "website" {
+  name                = "${var.project_name}-swa-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = var.location
+  sku_tier            = var.static_web_app_sku
+  sku_size            = var.static_web_app_sku
+
+  tags = var.tags
+}
+
+# ============================================
+# Azure PostgreSQL Flexible Server
+# ============================================
+resource "azurerm_postgresql_flexible_server" "main" {
+  name                   = "${var.project_name}-postgres-${random_string.suffix.result}"
+  resource_group_name    = azurerm_resource_group.main.name
+  location               = var.location
+  version                = var.postgres_version
+  administrator_login    = var.postgres_admin_username
+  administrator_password = var.postgres_admin_password
+  zone                   = "1"
+
+  storage_mb = var.postgres_storage_mb
+  sku_name   = var.postgres_sku
+
+  backup_retention_days        = 7
+  geo_redundant_backup_enabled = false
+
+  tags = var.tags
+}
+
+# Firewall rule to allow Azure services
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_postgresql_flexible_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+# PostgreSQL Database
+resource "azurerm_postgresql_flexible_server_database" "ssca" {
+  name      = "ssca"
+  server_id = azurerm_postgresql_flexible_server.main.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+}
+
+# ============================================
+# Azure Storage Account (for audio files)
+# ============================================
+resource "azurerm_storage_account" "audio" {
+  name                     = "${replace(var.project_name, "-", "")}audio${random_string.suffix.result}"
+  resource_group_name      = azurerm_resource_group.main.name
+  location                 = var.location
+  account_tier             = var.storage_account_tier
+  account_replication_type = var.storage_replication_type
+
+  blob_properties {
+    cors_rule {
+      allowed_headers    = ["*"]
+      allowed_methods    = ["GET", "HEAD", "OPTIONS"]
+      allowed_origins    = ["*"] # Update with your domain in production
+      exposed_headers    = ["*"]
+      max_age_in_seconds = 3600
+    }
+  }
+
+  tags = var.tags
+}
+
+# Blob container for audio files
+resource "azurerm_storage_container" "audio_files" {
+  name                  = "audio-files"
+  storage_account_name  = azurerm_storage_account.audio.name
+  container_access_type = "blob" # Public read access for audio files
+}
