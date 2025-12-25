@@ -20,8 +20,8 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
+          dotnet-version: '8.0.x'
+
 
       - name: Restore dependencies
         run: |
@@ -37,7 +37,7 @@ jobs:
       - name: Build API
         run: |
           cd src/SSCA.website.API
-          dotnet publish -c Release -r linux-x64 --self-contained -o ../../output/api
+          dotnet publish -c Release -o ../../output/api
 
       - name: Deploy to Azure Static Web Apps
         id: deploy
