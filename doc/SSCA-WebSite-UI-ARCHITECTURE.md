@@ -175,6 +175,11 @@ SSCA.website.UI/
   - Ensures schema consistency across environments (Local & Azure).
   - Automatically handles First-Time-Run initialization.
 
+### Logging & Monitoring
+- **Application Insights**: The backend managed functions are linked to Azure Application Insights.
+- **Log Source**: `azurerm_application_insights` resource in `infrastructure/resources.tf`.
+- **Visibility**: Enables real-time logging, exception tracking, and performance monitoring for the API.
+
 ---
 
 ## Build & Run

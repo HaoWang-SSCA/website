@@ -58,6 +58,24 @@ This document summarizes the required tools, configurations, and known constrain
     *   [Migrations Overview](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/)
 *   **PostgreSQL**:
     *   [Npgsql Provider for EF Core](https://www.npgsql.org/efcore/)
+*   **Infrastructure & Monitoring**:
+    *   [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
+
+## 4.5. CI/CD Authentication (Service Principal)
+To enable Terraform deployment from GitHub Actions:
+1.  **Create Service Principal**:
+    ```bash
+    # Run in Git Bash with MSYS_NO_PATHCONV to handle paths correctly
+    MSYS_NO_PATHCONV=1 az ad sp create-for-rbac \
+      --name "github-actions-ssca" \
+      --role contributor \
+      --scopes /subscriptions/<SUBSCRIPTION_ID> \
+      --sdk-auth
+    ```
+2.  **Configure GitHub Secret**:
+    *   Copy the JSON output.
+    *   Go to GitHub Repo -> Settings -> Secrets and variables -> Actions.
+    *   Create a New Repository Secret named `AZURE_CREDENTIALS` and paste the JSON.
 
 ## 5. Infrastructure & Deployment (Terraform)
 
