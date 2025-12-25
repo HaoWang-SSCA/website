@@ -35,4 +35,20 @@ var host = new HostBuilder()
     })
     .Build();
 
+// Auto-migrate database on startup
+using (var scope = host.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception)
+    {
+        // Rethrowing to ensure the app doesn't start with a bad schema
+        throw;
+    }
+}
+
 host.Run();

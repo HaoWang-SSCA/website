@@ -23,6 +23,10 @@
 - CTA Buttons: "2025一年读经一遍", "Sunday Bulletin 主日单张"
 - Login Button: "登陆"
 
+### Backend Updates (December 2024)
+1. **Automatic Database Migration** - Configured `Program.cs` in the API project to automatically apply EF Core migrations on application startup. This ensures the database schema is always up-to-date without requiring manual CI/CD steps.
+2. **Framework Compatibility** - Addressed .NET SDK version mismatches by targeting .NET 8.0 for compatibility with Azure Static Web Apps.
+
 ---
 
 ## Architecture Diagram
@@ -158,6 +162,18 @@ SSCA.website.UI/
 | **Blazor WebAssembly** | Client-side .NET runtime |
 | **Lexend Font** | Google Fonts typography |
 | **Material Symbols** | Icon set |
+
+---
+
+## Backend & Database
+
+### Database Migrations
+- **Strategy**: Code-first migrations using Entity Framework Core.
+- **Automation**: The API (`SSCA.website.API`) is configured to run `context.Database.Migrate()` automatically during startup.
+- **Benefits**:
+  - Simplifies deployment (no separate pipeline step needed).
+  - Ensures schema consistency across environments (Local & Azure).
+  - Automatically handles First-Time-Run initialization.
 
 ---
 
