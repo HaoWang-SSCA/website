@@ -15,7 +15,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region for resources (must support Azure Static Web Apps managed functions)"
   type        = string
-  default     = "westus2" # Supported regions: westus2, centralus, eastus2, westeurope, eastasia
+  default     = "centralus" # Supported regions: westus2, centralus, eastus2, westeurope, eastasia
 }
 
 variable "resource_group_name" {

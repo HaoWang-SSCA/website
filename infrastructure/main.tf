@@ -24,12 +24,13 @@ terraform {
   #   3. Set env var: export ARM_ACCESS_KEY="<the_key>"
   #   4. Uncomment this block and run: terraform init
   #
-  # backend "azurerm" {
-  #   storage_account_name = "hwtfstate"
-  #   container_name       = "tfstate"
-  #   key                  = "ssca-website.tfstate"  # Unique per project
-  #   # Uses ARM_ACCESS_KEY environment variable (don't hardcode!)
-  # }
+  backend "azurerm" {
+    storage_account_name = "hwtfstate"
+    container_name       = "tfstate"
+    key                  = "ssca-website.tfstate" # Unique per project
+    resource_group_name  = "terraform-state-rg"
+    # Uses ARM_ACCESS_KEY environment variable (don't hardcode!)
+  }
 }
 
 provider "azurerm" {

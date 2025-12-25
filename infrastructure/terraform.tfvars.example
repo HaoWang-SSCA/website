@@ -3,7 +3,7 @@
 
 project_name        = "ssca-bc"
 environment         = "prod"
-location            = "westus2"  # Supported: westus2, centralus, eastus2, westeurope, eastasia
+location            = "centralus"  # Supported: westus2, centralus, eastus2, westeurope, eastasia
 resource_group_name = "ssca-bc-website-rg"
 
 # PostgreSQL

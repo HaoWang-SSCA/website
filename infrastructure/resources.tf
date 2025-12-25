@@ -22,6 +22,11 @@ resource "azurerm_static_web_app" "website" {
   sku_tier            = var.static_web_app_sku
   sku_size            = var.static_web_app_sku
 
+  app_settings = {
+    "ConnectionStrings__PostgreSQL"   = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
+    "ConnectionStrings__AzureStorage" = azurerm_storage_account.audio.primary_connection_string
+  }
+
   tags = var.tags
 }
 
