@@ -32,12 +32,12 @@ jobs:
       - name: Build UI
         run: |
           cd src/SSCA.website.UI
-          dotnet publish -c Release -o ../../../output/wwwroot
+          dotnet publish -c Release -o ../../output/wwwroot
 
       - name: Build API
         run: |
           cd src/SSCA.website.API
-          dotnet publish -c Release -o ../../../output/api
+          dotnet publish -c Release -o ../../output/api
 
       - name: Deploy to Azure Static Web Apps
         id: deploy
