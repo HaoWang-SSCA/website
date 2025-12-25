@@ -1,34 +1,38 @@
-using Azure.Storage.Blobs;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using SSCA.website.API.Data;
 using SSCA.website.API.Services;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 
-var builder = FunctionsApplication.CreateBuilder(args);
+var host = new HostBuilder()
+    .ConfigureFunctionsWebApplication()
+    .ConfigureServices(services =>
+    {
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.ConfigureFunctionsApplicationInsights();
 
-builder.ConfigureFunctionsWebApplication();
+        // Add EF Core with PostgreSQL
+        services.AddDbContext<AppDbContext>((sp, options) =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            options.UseNpgsql(configuration.GetConnectionString("PostgreSQL"));
+        });
 
-// Add EF Core with PostgreSQL
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
+        // Add MeetingService
+        services.AddScoped<IMeetingService, MeetingService>();
 
-// Add MeetingService
-builder.Services.AddScoped<IMeetingService, MeetingService>();
+        // Add Azure Blob Storage
+        services.AddSingleton(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connectionString = configuration.GetConnectionString("AzureStorage") 
+                ?? "UseDevelopmentStorage=true";
+            return new BlobServiceClient(connectionString);
+        });
+    })
+    .Build();
 
-// Add Azure Blob Storage
-builder.Services.AddSingleton(sp =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("AzureStorage") 
-        ?? "UseDevelopmentStorage=true";
-    return new BlobServiceClient(connectionString);
-});
-
-builder.Services
-    .AddApplicationInsightsTelemetryWorkerService()
-    .ConfigureFunctionsApplicationInsights();
-
-builder.Build().Run();
+host.Run();
