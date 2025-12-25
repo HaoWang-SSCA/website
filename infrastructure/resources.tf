@@ -23,8 +23,10 @@ resource "azurerm_static_web_app" "website" {
   sku_size            = var.static_web_app_sku
 
   app_settings = {
-    "ConnectionStrings__PostgreSQL"   = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
-    "ConnectionStrings__AzureStorage" = azurerm_storage_account.audio.primary_connection_string
+    "ConnectionStrings__PostgreSQL"         = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
+    "ConnectionStrings__AzureStorage"       = azurerm_storage_account.audio.primary_connection_string
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
   }
 
   tags = var.tags
@@ -95,4 +97,27 @@ resource "azurerm_storage_container" "audio_files" {
   name                  = "audio-files"
   storage_account_name  = azurerm_storage_account.audio.name
   container_access_type = "blob" # Public read access for audio files
+}
+
+# ============================================
+# Application Insights & Log Analytics
+# ============================================
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = "${var.project_name}-log-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+
+  tags = var.tags
+}
+
+resource "azurerm_application_insights" "main" {
+  name                = "${var.project_name}-insights-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+
+  tags = var.tags
 }
