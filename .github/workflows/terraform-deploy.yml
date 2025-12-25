@@ -36,6 +36,11 @@ jobs:
         with:
           terraform_version: "1.6"
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
         continue-on-error: true
