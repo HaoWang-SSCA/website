@@ -137,12 +137,13 @@ public class MeetingService : IMeetingService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var entities = await query
             .OrderByDescending(m => m.Date)
             .Skip((searchQuery.Page - 1) * searchQuery.PageSize)
             .Take(searchQuery.PageSize)
-            .Select(m => ToDto(m))
             .ToListAsync();
+
+        var items = entities.Select(m => ToDto(m)).ToList();
 
         return new PagedResult<MessageMeetingDto>
         {
