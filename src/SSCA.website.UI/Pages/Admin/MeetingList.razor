@@ -75,14 +75,18 @@
                                         <span class="badge badge-regular">主日</span>
                                     }
                                 </td>
-                                <td>
+                                <td class="media-cell">
                                     @if (!string.IsNullOrEmpty(meeting.AudioUrl))
                                     {
-                                        <span class="material-symbols-outlined media-icon" title="Has Audio">headphones</span>
+                                        <a href="@meeting.AudioUrl" target="_blank" class="media-link" title="Play Audio">
+                                            <span class="material-symbols-outlined media-icon">headphones</span>
+                                        </a>
                                     }
                                     @if (!string.IsNullOrEmpty(meeting.VideoUrl))
                                     {
-                                        <span class="material-symbols-outlined media-icon" title="Has Video">play_circle</span>
+                                        <a href="@meeting.VideoUrl" target="_blank" class="media-link" title="Watch Video">
+                                            <span class="material-symbols-outlined media-icon">play_circle</span>
+                                        </a>
                                     }
                                 </td>
                                 <td>
