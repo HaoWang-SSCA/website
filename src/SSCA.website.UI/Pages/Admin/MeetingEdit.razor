@@ -75,7 +75,10 @@
                         {
                             <div class="current-audio">
                                 <span class="material-symbols-outlined">headphones</span>
-                                <a href="@existingMeeting.AudioUrl" target="_blank">当前音频 Current Audio</a>
+                                <span>当前音频 Current Audio</span>
+                                <audio controls preload="none" class="audio-player">
+                                    <source src="@existingMeeting.AudioUrl" type="audio/mpeg">
+                                </audio>
                             </div>
                         }
                         @if (!string.IsNullOrEmpty(model.AudioBlobName))
