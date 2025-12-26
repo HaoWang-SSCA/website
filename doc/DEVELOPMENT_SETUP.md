@@ -93,6 +93,35 @@ You must provide a Personal Access Token (PAT) because the default `GITHUB_TOKEN
     *   Name: `GH_PAT`
     *   Value: The token string starting with `github_pat_...`
 
+## 4.7. Azure AD Authentication
+The app uses Azure AD (Microsoft Entra ID) for user authentication on protected routes (`/admin/*`).
+
+### App Registration Setup
+1.  **Create App Registration**:
+    *   Go to Azure Portal → Microsoft Entra ID → App registrations → New registration.
+    *   Name: `SSCA-BC Website`
+    *   Supported accounts: Single tenant (or multi-tenant if needed)
+    *   Redirect URI: `https://<your-swa-url>/.auth/login/aad/callback`
+
+2.  **Get Values** (from Overview page):
+    *   **Application (client) ID** → save as `AAD_CLIENT_ID`
+    *   **Directory (tenant) ID** → already configured in `staticwebapp.config.json`
+
+3.  **Create Client Secret**:
+    *   Certificates & secrets → New client secret
+    *   Copy the **Value** (not ID) → save as `AAD_CLIENT_SECRET`
+
+4.  **Configure SWA Application Settings**:
+    *   Azure Portal → Static Web App → Configuration → Add:
+        *   `AAD_CLIENT_ID`: (your client ID)
+        *   `AAD_CLIENT_SECRET`: (your secret value)
+
+### Configuration File
+The Tenant ID is configured in `src/SSCA.website.UI/wwwroot/staticwebapp.config.json`:
+```json
+"openIdIssuer": "https://login.microsoftonline.com/<TENANT_ID>/v2.0"
+```
+
 ## 5. Infrastructure & Deployment (Terraform)
 
 ### Azure Region Constraints
