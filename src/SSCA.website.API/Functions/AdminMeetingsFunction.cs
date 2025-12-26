@@ -23,7 +23,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminGetMeetings")]
     public async Task<IActionResult> GetMeetings(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "admin/meetings")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admin/meetings")] HttpRequest req)
     {
         var query = ParseQuery(req);
         var result = await _meetingService.GetAllAsync(query);
@@ -32,7 +32,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminCreateMeeting")]
     public async Task<IActionResult> CreateMeeting(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "admin/meetings")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meetings")] HttpRequest req)
     {
         var request = await req.ReadFromJsonAsync<CreateMeetingRequest>();
         if (request == null)
@@ -44,7 +44,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminUpdateMeeting")]
     public async Task<IActionResult> UpdateMeeting(
-        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "admin/meetings/{id}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "admin/meetings/{id}")] HttpRequest req,
         Guid id)
     {
         var request = await req.ReadFromJsonAsync<UpdateMeetingRequest>();
@@ -61,7 +61,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminDeleteMeeting")]
     public async Task<IActionResult> DeleteMeeting(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "admin/meetings/{id}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "admin/meetings/{id}")] HttpRequest req,
         Guid id)
     {
         var success = await _meetingService.DeleteAsync(id);
@@ -73,7 +73,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminUploadAudio")]
     public async Task<IActionResult> UploadAudio(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "admin/meetings/{id}/audio")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meetings/{id}/audio")] HttpRequest req,
         Guid id)
     {
         if (!req.HasFormContentType || req.Form.Files.Count == 0)
