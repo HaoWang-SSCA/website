@@ -1,6 +1,7 @@
 @page "/gospel-meetings"
 @using SSCA.website.Shared.Models
 @inject HttpClient Http
+@inject NavigationManager Navigation
 
 <div class="meetings-page gospel-page">
     <div class="container">
@@ -85,6 +86,7 @@
                                         <iframe src="@GetEmbedUrl(meeting.VideoUrl)" 
                                                 title="YouTube video player" 
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                                referrerpolicy="strict-origin-when-cross-origin"
                                                 allowfullscreen></iframe>
                                     </div>
                                 </div>
@@ -170,9 +172,13 @@
         }
         catch { }
 
-        return !string.IsNullOrEmpty(videoId) 
-            ? $"https://www.youtube.com/embed/{videoId}" 
-            : videoUrl;
+        if (!string.IsNullOrEmpty(videoId))
+        {
+            var origin = Uri.EscapeDataString(Navigation.BaseUri.TrimEnd('/'));
+            return $"https://www.youtube.com/embed/{videoId}?origin={origin}";
+        }
+        
+        return videoUrl;
     }
 
     protected override async Task OnInitializedAsync()
