@@ -13,9 +13,9 @@ namespace SSCA.website.API.Functions;
 public class AdminMeetingsFunction
 {
     private readonly IMeetingService _meetingService;
-    private readonly BlobServiceClient _blobServiceClient;
+    private readonly BlobServiceClient? _blobServiceClient;
 
-    public AdminMeetingsFunction(IMeetingService meetingService, BlobServiceClient blobServiceClient)
+    public AdminMeetingsFunction(IMeetingService meetingService, BlobServiceClient? blobServiceClient = null)
     {
         _meetingService = meetingService;
         _blobServiceClient = blobServiceClient;
