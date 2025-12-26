@@ -97,3 +97,18 @@ variable "tags" {
     ManagedBy   = "Terraform"
   }
 }
+
+# Azure AD Authentication (for Static Web App)
+variable "aad_client_id" {
+  description = "Azure AD Client ID for authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "aad_client_secret" {
+  description = "Azure AD Client Secret for authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

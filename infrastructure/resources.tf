@@ -22,13 +22,18 @@ resource "azurerm_static_web_app" "website" {
   sku_tier            = var.static_web_app_sku
   sku_size            = var.static_web_app_sku
 
-  app_settings = {
-    "ConnectionStrings__PostgreSQL"         = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
-    "ConnectionStrings__AzureStorage"       = azurerm_storage_account.audio.primary_connection_string
-    "AzureStorage__BaseUrl"                 = trimsuffix(azurerm_storage_account.audio.primary_blob_endpoint, "/")
-    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
-  }
+  app_settings = merge(
+    {
+      "ConnectionStrings__PostgreSQL"         = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
+      "ConnectionStrings__AzureStorage"       = azurerm_storage_account.audio.primary_connection_string
+      "AzureStorage__BaseUrl"                 = trimsuffix(azurerm_storage_account.audio.primary_blob_endpoint, "/")
+      "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
+      "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
+    },
+    # Add AAD settings only if provided
+    var.aad_client_id != "" ? { "AAD_CLIENT_ID" = var.aad_client_id } : {},
+    var.aad_client_secret != "" ? { "AAD_CLIENT_SECRET" = var.aad_client_secret } : {}
+  )
 
   tags = var.tags
 }
