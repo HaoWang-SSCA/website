@@ -1,4 +1,4 @@
-@page "/admin/meetings"
+@page "/mgmt/meetings"
 @using SSCA.website.Shared.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -162,7 +162,7 @@
         try
         {
             var query = BuildQueryString();
-            meetings = await Http.GetFromJsonAsync<PagedResult<MessageMeetingDto>>($"api/admin/meetings{query}");
+            meetings = await Http.GetFromJsonAsync<PagedResult<MessageMeetingDto>>($"api/mgmt/meetings{query}");
         }
         catch (Exception ex)
         {
@@ -219,12 +219,12 @@
 
     private void CreateNew()
     {
-        Navigation.NavigateTo("/admin/meetings/new");
+        Navigation.NavigateTo("/mgmt/meetings/new");
     }
 
     private void EditMeeting(Guid id)
     {
-        Navigation.NavigateTo($"/admin/meetings/{id}");
+        Navigation.NavigateTo($"/mgmt/meetings/{id}");
     }
 
     private void ConfirmDelete(MessageMeetingDto meeting)
@@ -245,7 +245,7 @@
 
         try
         {
-            var response = await Http.DeleteAsync($"api/admin/meetings/{meetingToDelete.Id}");
+            var response = await Http.DeleteAsync($"api/mgmt/meetings/{meetingToDelete.Id}");
             if (response.IsSuccessStatusCode)
             {
                 showDeleteConfirm = false;

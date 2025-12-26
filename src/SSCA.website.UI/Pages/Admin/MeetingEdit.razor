@@ -1,5 +1,5 @@
-@page "/admin/meetings/new"
-@page "/admin/meetings/{Id:guid}"
+@page "/mgmt/meetings/new"
+@page "/mgmt/meetings/{Id:guid}"
 @using SSCA.website.Shared.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -203,7 +203,7 @@
                     IsGospel = model.IsGospel,
                     IsSpecialMeeting = model.IsSpecialMeeting
                 };
-                response = await Http.PostAsJsonAsync("api/admin/meetings", createRequest);
+                response = await Http.PostAsJsonAsync("api/mgmt/meetings", createRequest);
             }
             else
             {
@@ -217,12 +217,12 @@
                     IsGospel = model.IsGospel,
                     IsSpecialMeeting = model.IsSpecialMeeting
                 };
-                response = await Http.PutAsJsonAsync($"api/admin/meetings/{Id}", updateRequest);
+                response = await Http.PutAsJsonAsync($"api/mgmt/meetings/{Id}", updateRequest);
             }
 
             if (response.IsSuccessStatusCode)
             {
-                Navigation.NavigateTo("/admin/meetings");
+                Navigation.NavigateTo("/mgmt/meetings");
             }
             else
             {
@@ -258,7 +258,7 @@
             using var streamContent = new StreamContent(stream);
             content.Add(streamContent, "file", file.Name);
 
-            var response = await Http.PostAsync($"api/admin/meetings/{Id}/audio", content);
+            var response = await Http.PostAsync($"api/mgmt/meeting-audio/{Id}", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -285,7 +285,7 @@
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/admin/meetings");
+        Navigation.NavigateTo("/mgmt/meetings");
     }
 
     private class MeetingFormModel
