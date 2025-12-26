@@ -1308,7 +1308,7 @@ h3 {
     color: var(--primary);
 }
 
-.current-audio > span:first-child {
+.current-audio>span:first-child {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1321,13 +1321,17 @@ h3 {
 /* Audio Player Styles */
 .audio-container {
     margin-top: 0.5rem;
+    width: 100%;
+    min-width: 200px;
 }
 
 .audio-player {
     width: 100%;
+    min-width: 200px;
     max-width: 300px;
     height: 40px;
     border-radius: 8px;
+    display: block;
 }
 
 .meeting-actions .audio-player {
