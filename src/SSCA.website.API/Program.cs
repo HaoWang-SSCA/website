@@ -7,6 +7,9 @@ using SSCA.website.API.Services;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 
+// Enable legacy timestamp behavior for Npgsql to handle DateTime properly
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureServices(services =>
