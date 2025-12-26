@@ -24,14 +24,14 @@ public class AdminMeetingsFunction
     // Simple test endpoint to diagnose routing
     [Function("AdminTest")]
     public IActionResult Test(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admintest")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "mgmt/test")] HttpRequest req)
     {
         return new OkObjectResult(new { message = "Admin API is working!", timestamp = DateTime.UtcNow });
     }
 
     [Function("AdminGetMeetings")]
     public async Task<IActionResult> GetMeetings(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admin/meetings")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "mgmt/meetings")] HttpRequest req)
     {
         var query = ParseQuery(req);
         var result = await _meetingService.GetAllAsync(query);
@@ -40,7 +40,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminCreateMeeting")]
     public async Task<IActionResult> CreateMeeting(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meetings")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/meetings")] HttpRequest req)
     {
         var request = await req.ReadFromJsonAsync<CreateMeetingRequest>();
         if (request == null)
@@ -52,7 +52,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminUpdateMeeting")]
     public async Task<IActionResult> UpdateMeeting(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "admin/meetings/{id}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "mgmt/meetings/{id:guid}")] HttpRequest req,
         Guid id)
     {
         var request = await req.ReadFromJsonAsync<UpdateMeetingRequest>();
@@ -69,7 +69,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminDeleteMeeting")]
     public async Task<IActionResult> DeleteMeeting(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "admin/meetings/{id}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "mgmt/meetings/{id:guid}")] HttpRequest req,
         Guid id)
     {
         var success = await _meetingService.DeleteAsync(id);
@@ -81,7 +81,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminUploadAudio")]
     public async Task<IActionResult> UploadAudio(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meeting-audio/{id:guid}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/meeting-audio/{id:guid}")] HttpRequest req,
         Guid id)
     {
         if (!req.HasFormContentType || req.Form.Files.Count == 0)

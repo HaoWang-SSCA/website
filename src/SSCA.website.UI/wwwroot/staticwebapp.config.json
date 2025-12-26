@@ -6,6 +6,12 @@
             "allowedRoles": [
                 "authenticated"
             ]
+        },
+        {
+            "route": "/api/mgmt/*",
+            "allowedRoles": [
+                "authenticated"
+            ]
         }
     ],
     "navigationFallback": {
