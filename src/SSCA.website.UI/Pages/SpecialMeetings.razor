@@ -145,20 +145,30 @@
         if (string.IsNullOrEmpty(videoUrl)) return "";
         
         var videoId = "";
-        if (videoUrl.Contains("watch?v="))
+        try
         {
-            videoId = videoUrl.Split("watch?v=")[1].Split("&")[0];
+            if (videoUrl.Contains("watch?v="))
+            {
+                videoId = videoUrl.Split("watch?v=")[1].Split("&")[0];
+            }
+            else if (videoUrl.Contains("youtu.be/"))
+            {
+                videoId = videoUrl.Split("youtu.be/")[1].Split("?")[0];
+            }
+            else if (videoUrl.Contains("/embed/"))
+            {
+                videoId = videoUrl.Split("/embed/")[1].Split("?")[0];
+            }
+            else if (videoUrl.Contains("/v/"))
+            {
+                videoId = videoUrl.Split("/v/")[1].Split("?")[0];
+            }
         }
-        else if (videoUrl.Contains("youtu.be/"))
-        {
-            videoId = videoUrl.Split("youtu.be/")[1].Split("?")[0];
-        }
-        else if (videoUrl.Contains("/embed/"))
-        {
-            return videoUrl; // Already an embed URL
-        }
+        catch { }
 
-        return $"https://www.youtube.com/embed/{videoId}";
+        return !string.IsNullOrEmpty(videoId) 
+            ? $"https://www.youtube-nocookie.com/embed/{videoId}" 
+            : videoUrl;
     }
 
     protected override async Task OnInitializedAsync()

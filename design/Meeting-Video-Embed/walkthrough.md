@@ -18,7 +18,8 @@ I updated the following pages to replace the external YouTube links with a toggl
 
 Each page now includes:
 - A "视频" (Video) button that toggles the player.
-- Logic to automatically convert standard YouTube URLs to embeddable URLs.
+- Logic to robustly extract YouTube IDs from various link formats (watch?v=, youtu.be, embed, etc.).
+- Use the privacy-focused `youtube-nocookie.com` domain for better compatibility.
 - A responsive `iframe` container for the video.
 
 ## Verification Results
@@ -29,7 +30,7 @@ I verified that the project builds successfully with the new changes.
 ```bash
 dotnet build src/SSCA.website.UI/SSCA_BC.csproj
 ...
-Build succeeded in 4.5s
+Build succeeded in 14.3s
 ```
 
 ### Manual Testing (Recommended)
@@ -39,7 +40,10 @@ Build succeeded in 4.5s
 4. The video should expand and play within the card.
 5. Click "关闭" (Close) to hide the video player.
 
-## CSP Update
-I updated the Content Security Policy (CSP) in `staticwebapp.config.json` to explicitly allow iframes from YouTube, which was previously blocking the embedded content.
+## CSP and Header Update
+I updated the security settings in `staticwebapp.config.json` to resolve playback blocks:
+- Set `X-Frame-Options` to `SAMEORIGIN`.
+- Expanded `Content-Security-Policy` `frame-src` to allow all YouTube subdomains.
+- Added `https://*.ytimg.com` to `img-src` to allow YouTube thumbnails.
 
 - [staticwebapp.config.json](file:///c:/Projects/HaoWang-SSCA/website/src/SSCA.website.UI/wwwroot/staticwebapp.config.json)
