@@ -47,7 +47,7 @@ public class MeetingsFunction
 
     [Function("GetMeetingById")]
     public async Task<IActionResult> GetMeetingById(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/{id}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/{id:guid}")] HttpRequest req,
         Guid id)
     {
         var result = await _meetingService.GetByIdAsync(id);
