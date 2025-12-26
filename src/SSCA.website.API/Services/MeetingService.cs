@@ -66,7 +66,7 @@ public class MeetingService : IMeetingService
         var meeting = new MessageMeeting
         {
             Id = Guid.NewGuid(),
-            Date = request.Date,
+            Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc),
             Speaker = request.Speaker,
             Topic = request.Topic,
             VideoUrl = request.VideoUrl,
@@ -86,7 +86,7 @@ public class MeetingService : IMeetingService
         var meeting = await _context.MessageMeetings.FindAsync(request.Id);
         if (meeting == null) return null;
 
-        meeting.Date = request.Date;
+        meeting.Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc);
         meeting.Speaker = request.Speaker;
         meeting.Topic = request.Topic;
         meeting.VideoUrl = request.VideoUrl;
