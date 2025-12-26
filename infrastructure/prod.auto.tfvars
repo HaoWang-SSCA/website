@@ -17,7 +17,7 @@ storage_account_tier     = "Standard"
 storage_replication_type = "LRS"
 
 # Static Web App
-static_web_app_sku = "Free"
+static_web_app_sku = "Standard"
 github_repo_url    = "https://github.com/HaoWang-SSCA/website"
 github_branch      = "main"
 
