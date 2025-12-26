@@ -21,6 +21,14 @@ public class AdminMeetingsFunction
         _blobServiceClient = blobServiceClient;
     }
 
+    // Simple test endpoint to diagnose routing
+    [Function("AdminTest")]
+    public IActionResult Test(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admintest")] HttpRequest req)
+    {
+        return new OkObjectResult(new { message = "Admin API is working!", timestamp = DateTime.UtcNow });
+    }
+
     [Function("AdminGetMeetings")]
     public async Task<IActionResult> GetMeetings(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admin/meetings")] HttpRequest req)
