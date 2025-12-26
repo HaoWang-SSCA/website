@@ -1,6 +1,7 @@
 @page "/mgmt/meetings/new"
 @page "/mgmt/meetings/{Id:guid}"
 @using SSCA.website.Shared.Models
+@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
@@ -52,6 +53,7 @@
                         <div class="form-group full-width">
                             <label for="videoUrl">视频链接 Video URL</label>
                             <InputText id="videoUrl" @bind-Value="model.VideoUrl" class="form-control" placeholder="https://youtube.com/..." />
+                            <ValidationMessage For="@(() => model.VideoUrl)" />
                         </div>
 
                         <div class="form-group">
@@ -304,6 +306,7 @@
         public DateTime Date { get; set; } = DateTime.Today;
         public string Speaker { get; set; } = string.Empty;
         public string Topic { get; set; } = string.Empty;
+        [Url]
         public string? VideoUrl { get; set; }
         public bool IsGospel { get; set; }
         public bool IsSpecialMeeting { get; set; }

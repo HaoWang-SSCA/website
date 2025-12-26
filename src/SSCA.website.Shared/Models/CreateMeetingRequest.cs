@@ -19,6 +19,7 @@ public class CreateMeetingRequest
     public string Topic { get; set; } = string.Empty;    // 信息主题
 
     [MaxLength(500)]
+    [Url]
     public string? VideoUrl { get; set; }           // YouTube/Video link
 
     public bool IsGospel { get; set; }              // 福音信息 flag
