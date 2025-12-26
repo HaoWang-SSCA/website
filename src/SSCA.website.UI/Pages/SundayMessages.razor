@@ -154,6 +154,10 @@
             {
                 videoId = videoUrl.Split("youtu.be/")[1].Split("?")[0];
             }
+            else if (videoUrl.Contains("/live/"))
+            {
+                videoId = videoUrl.Split("/live/")[1].Split("?")[0];
+            }
             else if (videoUrl.Contains("/embed/"))
             {
                 videoId = videoUrl.Split("/embed/")[1].Split("?")[0];
@@ -166,7 +170,7 @@
         catch { }
 
         return !string.IsNullOrEmpty(videoId) 
-            ? $"https://www.youtube-nocookie.com/embed/{videoId}" 
+            ? $"https://www.youtube.com/embed/{videoId}" 
             : videoUrl;
     }
 
