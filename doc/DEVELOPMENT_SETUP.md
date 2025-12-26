@@ -77,6 +77,22 @@ To enable Terraform deployment from GitHub Actions:
     *   Go to GitHub Repo -> Settings -> Secrets and variables -> Actions.
     *   Create a New Repository Secret named `AZURE_CREDENTIALS` and paste the JSON.
 
+## 4.6. CI/CD Secret Automation (Deployment Token)
+The Terraform workflow is configured to **automatically update** the Static Web App deployment token (`AZURE_STATIC_WEB_APPS_API_TOKEN`) in GitHub Secrets.
+
+**Requirement**:
+You must provide a Personal Access Token (PAT) because the default `GITHUB_TOKEN` cannot update secrets.
+
+1.  **Create Fine-grained PAT**:
+    *   Go to **GitHub Settings** -> **Developer settings** -> **Personal access tokens** -> **Fine-grained tokens**.
+    *   Select your repository (`HaoWang-SSCA/website`).
+    *   **Permissions**:
+        *   `Secrets`: **Read and Write**
+        *   `Metadata`: Read-only (default)
+2.  **Add Secret**:
+    *   Name: `GH_PAT`
+    *   Value: The token string starting with `github_pat_...`
+
 ## 5. Infrastructure & Deployment (Terraform)
 
 ### Azure Region Constraints
