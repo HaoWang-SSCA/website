@@ -38,3 +38,8 @@ Build succeeded in 4.5s
 3. Click the "视频" button.
 4. The video should expand and play within the card.
 5. Click "关闭" (Close) to hide the video player.
+
+## CSP Update
+I updated the Content Security Policy (CSP) in `staticwebapp.config.json` to explicitly allow iframes from YouTube, which was previously blocking the embedded content.
+
+- [staticwebapp.config.json](file:///c:/Projects/HaoWang-SSCA/website/src/SSCA.website.UI/wwwroot/staticwebapp.config.json)
