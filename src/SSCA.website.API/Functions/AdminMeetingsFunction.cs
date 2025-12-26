@@ -81,7 +81,7 @@ public class AdminMeetingsFunction
 
     [Function("AdminUploadAudio")]
     public async Task<IActionResult> UploadAudio(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meetings/{id}/audio")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/meeting-audio/{id:guid}")] HttpRequest req,
         Guid id)
     {
         if (!req.HasFormContentType || req.Form.Files.Count == 0)
