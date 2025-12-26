@@ -42,7 +42,7 @@ var items = entities.Select(m => ToDto(m)).ToList();
 ### Admin API Returns 404
 **Symptoms:** 
 - Public APIs (`/api/meetings/sunday`) work fine
-- Admin APIs (`/api/admin/meetings`) return 404
+- Admin APIs (`/api/mgmt/meetings`) return 404
 - User is authenticated (verified via `/.auth/me`)
 
 **Possible Causes & Solutions:**
@@ -62,6 +62,58 @@ var items = entities.Select(m => ToDto(m)).ToList();
        "exclude": ["/api/*", "/css/*", ...]
    }
    ```
+
+3. **SWA Reserved Route Conflicts** – see below
+
+---
+
+### SWA Reserved Route Conflicts ⚠️
+**Error:** `The 'FunctionName' function is in error: The specified route conflicts with one or more built in routes.`
+
+**Cause:** Azure Static Web Apps reserves certain path prefixes for built-in functionality. The `admin` prefix is reserved.
+
+**Solution:** Use an alternative prefix like `mgmt` instead of `admin`:
+```csharp
+// Wrong (reserved by SWA)
+Route = "admin/meetings"
+
+// Correct (use mgmt or other prefix)
+Route = "mgmt/meetings"
+```
+
+**Reserved prefixes to avoid:**
+- `admin`
+- `api-admin` (potentially)
+- Any paths that might conflict with built-in endpoints
+
+---
+
+### Dependency Injection Failure (Silent 404)
+**Symptoms:**
+- Function is registered in Azure Portal (Functions page shows it)
+- But calling the endpoint returns 404 with no error logs
+- Other functions in the same file DON'T work either
+
+**Cause:** A required dependency in the function's constructor isn't registered or fails to resolve.
+
+**Example:**
+```csharp
+public AdminMeetingsFunction(
+    IMeetingService meetingService,
+    BlobServiceClient blobServiceClient)  // ← If this fails, entire class won't load
+```
+
+**Solutions:**
+1. Make optional dependencies nullable with defaults:
+   ```csharp
+   public AdminMeetingsFunction(
+       IMeetingService meetingService,
+       BlobServiceClient? blobServiceClient = null)
+   ```
+
+2. Ensure connection strings are configured in SWA Application Settings
+
+3. Check Application Insights for startup exceptions
 
 ---
 
@@ -145,6 +197,25 @@ var items = entities.Select(m => ToDto(m)).ToList();
 
 ---
 
+### host.json routePrefix Error
+**Error:** `the host.json file cannot specify a http.routePrefix value other than 'api'`
+
+**Cause:** SWA managed functions require the routePrefix to be `"api"` (default).
+
+**Solution:** Remove any custom `routePrefix` from `host.json`:
+```json
+// Wrong
+"extensions": {
+    "http": {
+        "routePrefix": ""
+    }
+}
+
+// Correct - just don't specify routePrefix at all
+```
+
+---
+
 ## Debugging Tips
 
 ### Check Auth Status
@@ -152,6 +223,9 @@ Visit `/.auth/me` to see current user info, roles, and claims.
 
 ### Check Function Registration
 Azure Portal → Static Web App → Functions → See if your function is listed.
+
+### Check Function Errors
+Azure Portal → Static Web App → Functions → Click function name → Check for error messages.
 
 ### Check Application Insights
 Look for startup errors, failed dependency calls, or exceptions.
@@ -162,5 +236,5 @@ Look for startup errors, failed dependency calls, or exceptions.
 curl -s -o /dev/null -w "%{http_code}" https://your-swa.azurestaticapps.net/api/meetings/sunday
 
 # Protected endpoint (will return 302 if not authenticated)
-curl -s -o /dev/null -w "%{http_code}" https://your-swa.azurestaticapps.net/api/admin/meetings
+curl -s -o /dev/null -w "%{http_code}" https://your-swa.azurestaticapps.net/api/mgmt/meetings
 ```
