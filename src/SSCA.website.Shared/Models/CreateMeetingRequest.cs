@@ -23,4 +23,7 @@ public class CreateMeetingRequest
 
     public bool IsGospel { get; set; }              // 福音信息 flag
     public bool IsSpecialMeeting { get; set; }      // 特别聚会 flag
+
+    [MaxLength(500)]
+    public string? AudioBlobName { get; set; }      // Audio file blob name from upload
 }

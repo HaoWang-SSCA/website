@@ -79,11 +79,17 @@ public class AdminMeetingsFunction
         return new NoContentResult();
     }
 
+    /// <summary>
+    /// Upload audio file to blob storage without requiring a meeting ID.
+    /// The returned blobName should be included in the create/update meeting request.
+    /// </summary>
     [Function("AdminUploadAudio")]
     public async Task<IActionResult> UploadAudio(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/meeting-audio/{id:guid}")] HttpRequest req,
-        Guid id)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/audio-upload")] HttpRequest req)
     {
+        if (_blobServiceClient == null)
+            return new StatusCodeResult(503); // Service unavailable if blob storage not configured
+
         if (!req.HasFormContentType || req.Form.Files.Count == 0)
             return new BadRequestObjectResult("No file uploaded");
 
@@ -108,11 +114,6 @@ public class AdminMeetingsFunction
         var blobClient = containerClient.GetBlobClient(blobName);
         using var stream = file.OpenReadStream();
         await blobClient.UploadAsync(stream, overwrite: true);
-
-        // Update meeting with blob name
-        var success = await _meetingService.UpdateAudioBlobAsync(id, blobName);
-        if (!success)
-            return new NotFoundResult();
 
         return new OkObjectResult(new { blobName, url = blobClient.Uri.ToString() });
     }

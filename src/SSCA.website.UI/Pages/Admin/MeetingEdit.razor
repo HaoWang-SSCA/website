@@ -69,36 +69,40 @@
                         </div>
                     </div>
 
-                    @if (!IsNew && existingMeeting != null)
-                    {
-                        <div class="audio-section">
-                            <h3>音频文件 Audio File</h3>
-                            @if (!string.IsNullOrEmpty(existingMeeting.AudioUrl))
+                    <div class="audio-section">
+                        <h3>音频文件 Audio File</h3>
+                        @if (!IsNew && existingMeeting != null && !string.IsNullOrEmpty(existingMeeting.AudioUrl))
+                        {
+                            <div class="current-audio">
+                                <span class="material-symbols-outlined">headphones</span>
+                                <a href="@existingMeeting.AudioUrl" target="_blank">当前音频 Current Audio</a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(model.AudioBlobName))
+                        {
+                            <div class="current-audio success">
+                                <span class="material-symbols-outlined">check_circle</span>
+                                <span>新音频已上传 New audio uploaded</span>
+                            </div>
+                        }
+                        <div class="form-group">
+                            <label for="audioFile">上传音频 Upload Audio @(IsNew ? "" : "(Optional)")</label>
+                            <InputFile id="audioFile" OnChange="HandleAudioUpload" accept=".mp3,.wav,.m4a,.ogg" />
+                            @if (isUploading)
                             {
-                                <div class="current-audio">
-                                    <span class="material-symbols-outlined">headphones</span>
-                                    <a href="@existingMeeting.AudioUrl" target="_blank">当前音频 Current Audio</a>
+                                <div class="upload-progress">
+                                    <span class="material-symbols-outlined spinning">progress_activity</span>
+                                    <span>上传中... Uploading...</span>
                                 </div>
                             }
-                            <div class="form-group">
-                                <label for="audioFile">上传新音频 Upload New Audio</label>
-                                <InputFile id="audioFile" OnChange="HandleAudioUpload" accept=".mp3,.wav,.m4a,.ogg" />
-                                @if (isUploading)
-                                {
-                                    <div class="upload-progress">
-                                        <span class="material-symbols-outlined spinning">progress_activity</span>
-                                        <span>上传中... Uploading...</span>
-                                    </div>
-                                }
-                                @if (!string.IsNullOrEmpty(uploadMessage))
-                                {
-                                    <div class="upload-message @(uploadSuccess ? "success" : "error")">
-                                        @uploadMessage
-                                    </div>
-                                }
-                            </div>
+                            @if (!string.IsNullOrEmpty(uploadMessage))
+                            {
+                                <div class="upload-message @(uploadSuccess ? "success" : "error")">
+                                    @uploadMessage
+                                </div>
+                            }
                         </div>
-                    }
+                    </div>
 
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
@@ -201,7 +205,8 @@
                     Topic = model.Topic,
                     VideoUrl = model.VideoUrl,
                     IsGospel = model.IsGospel,
-                    IsSpecialMeeting = model.IsSpecialMeeting
+                    IsSpecialMeeting = model.IsSpecialMeeting,
+                    AudioBlobName = model.AudioBlobName
                 };
                 response = await Http.PostAsJsonAsync("api/mgmt/meetings", createRequest);
             }
@@ -215,7 +220,8 @@
                     Topic = model.Topic,
                     VideoUrl = model.VideoUrl,
                     IsGospel = model.IsGospel,
-                    IsSpecialMeeting = model.IsSpecialMeeting
+                    IsSpecialMeeting = model.IsSpecialMeeting,
+                    AudioBlobName = model.AudioBlobName
                 };
                 response = await Http.PutAsJsonAsync($"api/mgmt/meetings/{Id}", updateRequest);
             }
@@ -241,8 +247,6 @@
 
     private async Task HandleAudioUpload(InputFileChangeEventArgs e)
     {
-        if (IsNew || !Id.HasValue) return;
-
         var file = e.File;
         if (file == null) return;
 
@@ -258,13 +262,17 @@
             using var streamContent = new StreamContent(stream);
             content.Add(streamContent, "file", file.Name);
 
-            var response = await Http.PostAsync($"api/mgmt/meeting-audio/{Id}", content);
+            var response = await Http.PostAsync("api/mgmt/audio-upload", content);
 
             if (response.IsSuccessStatusCode)
             {
-                uploadSuccess = true;
-                uploadMessage = "上传成功! Upload successful!";
-                await LoadMeeting(); // Refresh to show new audio URL
+                var result = await response.Content.ReadFromJsonAsync<AudioUploadResult>();
+                if (result != null)
+                {
+                    model.AudioBlobName = result.BlobName;
+                    uploadSuccess = true;
+                    uploadMessage = "上传成功! Upload successful!";
+                }
             }
             else
             {
@@ -296,5 +304,8 @@
         public string? VideoUrl { get; set; }
         public bool IsGospel { get; set; }
         public bool IsSpecialMeeting { get; set; }
+        public string? AudioBlobName { get; set; }
     }
+
+    private record AudioUploadResult(string BlobName, string Url);
 }

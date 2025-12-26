@@ -72,6 +72,7 @@ public class MeetingService : IMeetingService
             VideoUrl = request.VideoUrl,
             IsGospel = request.IsGospel,
             IsSpecialMeeting = request.IsSpecialMeeting,
+            AudioBlobName = request.AudioBlobName,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -92,6 +93,8 @@ public class MeetingService : IMeetingService
         meeting.VideoUrl = request.VideoUrl;
         meeting.IsGospel = request.IsGospel;
         meeting.IsSpecialMeeting = request.IsSpecialMeeting;
+        if (!string.IsNullOrEmpty(request.AudioBlobName))
+            meeting.AudioBlobName = request.AudioBlobName;
         meeting.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
