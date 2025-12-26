@@ -47,7 +47,7 @@ public class AdminMeetingsFunction
             return new BadRequestObjectResult("Invalid request body");
 
         var result = await _meetingService.CreateAsync(request);
-        return new CreatedAtRouteResult(null, new { id = result.Id }, result);
+        return new CreatedResult($"/api/mgmt/meetings/{result.Id}", result);
     }
 
     [Function("AdminUpdateMeeting")]
