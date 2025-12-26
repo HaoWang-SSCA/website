@@ -96,6 +96,9 @@ You must provide a Personal Access Token (PAT) because the default `GITHUB_TOKEN
 ## 4.7. Azure AD Authentication
 The app uses Azure AD (Microsoft Entra ID) for user authentication on protected routes (`/admin/*`).
 
+> [!IMPORTANT]
+> **Custom AAD authentication requires the Standard tier** (~$9/month). The Free tier only supports built-in providers.
+
 ### App Registration Setup
 1.  **Create App Registration**:
     *   Go to Azure Portal → Microsoft Entra ID → App registrations → New registration.
@@ -111,7 +114,11 @@ The app uses Azure AD (Microsoft Entra ID) for user authentication on protected 
     *   Certificates & secrets → New client secret
     *   Copy the **Value** (not ID) → save as `AAD_CLIENT_SECRET`
 
-4.  **Configure SWA Application Settings**:
+4.  **Enable ID Tokens**:
+    *   Authentication → Implicit grant and hybrid flows
+    *   Check ✅ **ID tokens (used for implicit and hybrid flows)**
+
+5.  **Configure SWA Application Settings**:
     *   Azure Portal → Static Web App → Configuration → Add:
         *   `AAD_CLIENT_ID`: (your client ID)
         *   `AAD_CLIENT_SECRET`: (your secret value)
@@ -121,6 +128,11 @@ The Tenant ID is configured in `src/SSCA.website.UI/wwwroot/staticwebapp.config.
 ```json
 "openIdIssuer": "https://login.microsoftonline.com/<TENANT_ID>/v2.0"
 ```
+
+### Debugging Authentication
+*   **Check login status**: Visit `/.auth/me` to see current user info.
+*   **Login loop**: Usually means invalid client secret. Regenerate and update in SWA Configuration.
+*   **404 on login endpoint**: Check SWA tier (must be Standard) and verify `AAD_CLIENT_ID`/`AAD_CLIENT_SECRET` exist.
 
 ## 5. Infrastructure & Deployment (Terraform)
 
