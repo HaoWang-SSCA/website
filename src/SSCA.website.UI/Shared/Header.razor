@@ -1,3 +1,5 @@
+@inject HttpClient Http
+
 <header class="header">
     <div class="container header-content">
         <div class="logo-container">
@@ -17,11 +19,27 @@
             <a href="/gospel-meetings">福音聚会</a>
             <a href="/special-meetings">特别聚会</a>
             <a href="#contact">联系我们</a>
+            @if (isAuthenticated)
+            {
+                <a href="/mgmt/meetings">管理聚会</a>
+            }
         </nav>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <button class="btn btn-primary btn-md hidden-mobile">
-                <span>登陆</span>
-            </button>
+            @if (isAuthenticated)
+            {
+                <div class="user-info hidden-mobile">
+                    <span class="user-name">@userName</span>
+                    <a href="/.auth/logout?post_logout_redirect_uri=/" class="btn btn-secondary btn-md">
+                        <span>Logout</span>
+                    </a>
+                </div>
+            }
+            else
+            {
+                <a href="/.auth/login/aad?post_login_redirect_uri=/" class="btn btn-primary btn-md hidden-mobile">
+                    <span>Login</span>
+                </a>
+            }
             <button class="mobile-menu-btn hidden-desktop" @onclick="ToggleMobileMenu">
                 <span class="material-symbols-outlined">@(isMobileMenuOpen ? "close" : "menu")</span>
             </button>
@@ -38,16 +56,61 @@
                 <a href="/gospel-meetings" @onclick="CloseMobileMenu">福音聚会</a>
                 <a href="/special-meetings" @onclick="CloseMobileMenu">特别聚会</a>
                 <a href="#contact" @onclick="CloseMobileMenu">联系我们</a>
+                @if (isAuthenticated)
+                {
+                    <a href="/mgmt/meetings" @onclick="CloseMobileMenu">管理聚会</a>
+                }
             </nav>
-            <button class="btn btn-primary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
-                <span>登陆</span>
-            </button>
+            @if (isAuthenticated)
+            {
+                <div class="mobile-user-info">
+                    <span class="user-name">@userName</span>
+                </div>
+                <a href="/.auth/logout?post_logout_redirect_uri=/" class="btn btn-secondary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
+                    <span>Logout</span>
+                </a>
+            }
+            else
+            {
+                <a href="/.auth/login/aad?post_login_redirect_uri=/" class="btn btn-primary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
+                    <span>Login</span>
+                </a>
+            }
         </div>
     }
 </header>
 
 @code {
     private bool isMobileMenuOpen = false;
+    private bool isAuthenticated = false;
+    private string userName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckAuthenticationState();
+    }
+
+    private async Task CheckAuthenticationState()
+    {
+        try
+        {
+            var response = await Http.GetAsync("/.auth/me");
+            if (response.IsSuccessStatusCode)
+            {
+                var authData = await response.Content.ReadFromJsonAsync<AuthData>();
+                if (authData?.ClientPrincipal != null)
+                {
+                    isAuthenticated = true;
+                    userName = authData.ClientPrincipal.UserDetails ?? "User";
+                }
+            }
+        }
+        catch
+        {
+            // Auth endpoint not available (local dev), user is not authenticated
+            isAuthenticated = false;
+        }
+    }
 
     private void ToggleMobileMenu()
     {
@@ -58,4 +121,19 @@
     {
         isMobileMenuOpen = false;
     }
+
+    // Models for Azure Static Web Apps auth response
+    private class AuthData
+    {
+        public ClientPrincipal? ClientPrincipal { get; set; }
+    }
+
+    private class ClientPrincipal
+    {
+        public string? IdentityProvider { get; set; }
+        public string? UserId { get; set; }
+        public string? UserDetails { get; set; }
+        public string[]? UserRoles { get; set; }
+    }
 }
+
