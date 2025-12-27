@@ -51,7 +51,7 @@
 
 ## Phase 3: Email Integration (Completed ✅)
 
-### 3.1 SMTP with Gmail
+### 3.1 SMTP with Microsoft 365
 - [x] Add MailKit package
 - [x] Implement SMTP email sending
 - [x] HTML email template with branding
@@ -61,7 +61,7 @@
 
 ### 3.2 Configuration
 - [x] Update `local.settings.template.json` with SMTP settings
-- [x] Document Gmail App Password setup
+- [x] Document Microsoft 365 setup (Authenticated SMTP, App Passwords)
 - [x] Update README with configuration guide
 
 ## Phase 4: Security Enhancements (Future)
@@ -105,20 +105,19 @@
 
 | Setting | Value |
 |---------|-------|
-| `Smtp__Host` | `smtp.gmail.com` |
+| `Smtp__Host` | `smtp.office365.com` |
 | `Smtp__Port` | `587` |
-| `Smtp__Username` | `tech@ssca-bc.org` |
-| `Smtp__Password` | `[Gmail App Password]` |
-| `Smtp__FromEmail` | `tech@ssca-bc.org` |
+| `Smtp__Username` | `hao.wang@team.ssca-bc.org` |
+| `Smtp__Password` | `[Password/App Password]` |
+| `Smtp__FromEmail` | `hao.wang@team.ssca-bc.org` |
 | `Smtp__FromName` | `SSCA-BC Website` |
 | `ContactEmail` | `tech@ssca-bc.org` |
 
-### Gmail App Password
+### Microsoft 365 Setup
 
-1. Enable 2FA on Gmail account
-2. Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-3. Generate App Password for "Mail"
-4. Use the 16-character password in `Smtp__Password`
+1. **Enable Authenticated SMTP** for the mailbox in M365 Admin Center.
+2. **Setup App Password** (if MFA is enabled) in My Account security info.
+3. Use these details in Azure Configuration.
 
 ## Testing Checklist
 

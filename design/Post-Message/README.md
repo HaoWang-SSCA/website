@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature allows website visitors to send messages directly through the contact page. Messages are submitted via a web form and processed by the backend API, which sends email notifications to the church office via Gmail SMTP.
+This feature allows website visitors to send messages directly through the contact page. Messages are submitted via a web form and processed by the backend API, which sends email notifications to the church office via Microsoft 365 SMTP.
 
 ## Architecture
 
@@ -22,8 +22,8 @@ This feature allows website visitors to send messages directly through the conta
                                                              │
                                                              ▼
                                                   ┌─────────────────────┐
-                                                  │    Gmail SMTP       │
-                                                  │  (smtp.gmail.com)   │
+                                                  │   Microsoft 365     │
+                                                  │ (smtp.office365.com)│
                                                   └─────────────────────┘
 ```
 
@@ -57,7 +57,7 @@ This feature allows website visitors to send messages directly through the conta
 
 - `IEmailService` interface
 - `EmailService` implementation using **MailKit** for SMTP
-- Sends formatted HTML and plain text emails via Gmail SMTP
+- Sends formatted HTML and plain text emails via Microsoft 365 SMTP
 - Falls back to logging if SMTP not configured
 
 ### Shared Models
@@ -146,11 +146,11 @@ Add these settings in **Azure Portal** → **Static Web App** → **Configuratio
 
 | Setting Name | Value | Description |
 |--------------|-------|-------------|
-| `Smtp__Host` | `smtp.gmail.com` | Gmail SMTP server |
+| `Smtp__Host` | `smtp.office365.com` | Microsoft 365 SMTP server |
 | `Smtp__Port` | `587` | SMTP port with TLS |
-| `Smtp__Username` | `tech@ssca-bc.org` | Gmail account |
-| `Smtp__Password` | `[App Password]` | Gmail App Password (see below) |
-| `Smtp__FromEmail` | `tech@ssca-bc.org` | Sender email address |
+| `Smtp__Username` | `hao.wang@team.ssca-bc.org` | M365 account email |
+| `Smtp__Password` | `[Password/App Password]` | M365 password (see below) |
+| `Smtp__FromEmail` | `hao.wang@team.ssca-bc.org` | Sender email address |
 | `Smtp__FromName` | `SSCA-BC Website` | Sender display name |
 | `ContactEmail` | `tech@ssca-bc.org` | Recipient email |
 
@@ -161,39 +161,38 @@ Copy `local.settings.template.json` to `local.settings.json` and update:
 ```json
 {
   "Values": {
-    "Smtp__Host": "smtp.gmail.com",
+    "Smtp__Host": "smtp.office365.com",
     "Smtp__Port": "587",
-    "Smtp__Username": "tech@ssca-bc.org",
-    "Smtp__Password": "YOUR_GMAIL_APP_PASSWORD",
-    "Smtp__FromEmail": "tech@ssca-bc.org",
+    "Smtp__Username": "hao.wang@team.ssca-bc.org",
+    "Smtp__Password": "YOUR_M365_PASSWORD",
+    "Smtp__FromEmail": "hao.wang@team.ssca-bc.org",
     "Smtp__FromName": "SSCA-BC Website",
     "ContactEmail": "tech@ssca-bc.org"
   }
 }
 ```
 
-## Gmail App Password Setup
+## Microsoft 365 Setup
 
-Gmail requires an **App Password** (not your regular password) for SMTP:
+### 1. Enable Authenticated SMTP
+Microsoft 365 often disables SMTP authentication by default for security. It must be enabled for the specific mailbox:
+1. Go to [Microsoft 365 Admin Center](https://admin.microsoft.com)
+2. **Users** -> **Active users** -> Select the user (`hao.wang@team.ssca-bc.org`)
+3. Click the **Mail** tab
+4. Click **Manage email apps**
+5. Ensure **Authenticated SMTP** is checked
+6. Click **Save changes**
 
-### Steps:
+### 2. Password Configuration
+- **If MFA is NOT enabled:** You can use your regular M365 password.
+- **If MFA IS enabled:** You must create an **App Password**:
+  1. Go to [mysignins.microsoft.com/security-info](https://mysignins.microsoft.com/security-info)
+  2. Click **+ Add sign-in method**
+  3. Select **App password**
+  4. Name it "SSCA Website"
+  5. Copy the 16-character password and use it as `Smtp__Password`.
 
-1. **Enable 2-Factor Authentication**
-   - Go to [myaccount.google.com/security](https://myaccount.google.com/security)
-   - Enable **2-Step Verification**
-
-2. **Generate App Password**
-   - Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-   - Select app: "Mail"
-   - Select device: "Other (Custom name)"
-   - Enter: "SSCA Website"
-   - Click **Generate**
-
-3. **Copy the 16-character password**
-   - Use this as `Smtp__Password` in configuration
-   - Format: `xxxx xxxx xxxx xxxx` (spaces optional)
-
-⚠️ **Important:** Never commit App Passwords to git!
+*Note: If "App password" is not in the list, it means your Organization Admin has disabled it or MFA is not required.*
 
 ## Email Format
 
@@ -246,18 +245,18 @@ If SMTP is not configured, the service will:
 ### Common Issues
 
 1. **"Authentication failed"**
-   - Verify you're using an App Password, not regular password
-   - Check 2FA is enabled on the Gmail account
-   - Verify username is correct
+   - Verify **Authenticated SMTP** is enabled in Admin Center (Step 1 above).
+   - Check if you need an App Password (Step 2 above).
+   - Verify username is the full email address.
 
 2. **"Connection refused"**
-   - Check SMTP host and port settings
-   - Verify firewall allows outbound port 587
+   - Check `smtp.office365.com` and port `587`.
+   - Verify firewall allows outbound port 587.
 
 3. **Emails not received**
-   - Check spam folder
-   - Verify ContactEmail setting
-   - Check Application Insights logs for errors
+   - Check spam folder.
+   - Verify `ContactEmail` setting.
+   - Check Application Insights logs for errors.
 
 ### Application Insights Query
 
@@ -269,7 +268,7 @@ traces
 
 ## Security Considerations
 
-- ✅ App Password stored in Azure Configuration (secure)
+- ✅ Sensitive credentials stored in Azure Configuration (secure)
 - ✅ HTML content is escaped to prevent XSS
 - ✅ Input validated on both client and server
 - ⚠️ Consider adding rate limiting to prevent spam
