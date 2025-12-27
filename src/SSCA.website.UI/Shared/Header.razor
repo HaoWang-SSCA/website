@@ -11,7 +11,7 @@
                 <h3>南素里基督教会</h3>
             </div>
         </div>
-        <nav class="nav">
+        <nav class="nav hidden-mobile">
             <a href="/" class="active">Home</a>           
             <a href="/sunday-messages">主日信息</a>
             <a href="/gospel-meetings">福音聚会</a>
@@ -22,13 +22,40 @@
             <button class="btn btn-primary btn-md hidden-mobile">
                 <span>登陆</span>
             </button>
-            <button class="hidden-desktop" style="display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; padding: 0.5rem; color: var(--text-secondary); background: transparent; border: none; cursor: pointer;">
-                <span class="material-symbols-outlined">menu</span>
+            <button class="mobile-menu-btn hidden-desktop" @onclick="ToggleMobileMenu">
+                <span class="material-symbols-outlined">@(isMobileMenuOpen ? "close" : "menu")</span>
             </button>
         </div>
     </div>
+    
+    @* Mobile Menu *@
+    @if (isMobileMenuOpen)
+    {
+        <div class="mobile-menu hidden-desktop">
+            <nav class="mobile-nav">
+                <a href="/" @onclick="CloseMobileMenu">Home</a>
+                <a href="/sunday-messages" @onclick="CloseMobileMenu">主日信息</a>
+                <a href="/gospel-meetings" @onclick="CloseMobileMenu">福音聚会</a>
+                <a href="/special-meetings" @onclick="CloseMobileMenu">特别聚会</a>
+                <a href="#contact" @onclick="CloseMobileMenu">联系我们</a>
+            </nav>
+            <button class="btn btn-primary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
+                <span>登陆</span>
+            </button>
+        </div>
+    }
 </header>
 
 @code {
-    
+    private bool isMobileMenuOpen = false;
+
+    private void ToggleMobileMenu()
+    {
+        isMobileMenuOpen = !isMobileMenuOpen;
+    }
+
+    private void CloseMobileMenu()
+    {
+        isMobileMenuOpen = false;
+    }
 }
