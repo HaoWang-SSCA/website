@@ -27,6 +27,9 @@ var host = new HostBuilder()
         // Add MeetingService
         services.AddScoped<IMeetingService, MeetingService>();
 
+        // Add EmailService
+        services.AddScoped<IEmailService, EmailService>();
+
         // Add Azure Blob Storage
         services.AddSingleton(sp =>
         {

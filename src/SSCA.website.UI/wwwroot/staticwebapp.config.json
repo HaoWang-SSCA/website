@@ -49,6 +49,6 @@
     "globalHeaders": {
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "SAMEORIGIN",
-        "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: https://*.ytimg.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; media-src 'self' https://*.blob.core.windows.net; frame-src https://*.youtube.com https://*.youtube-nocookie.com;"
+        "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob: https://*.ytimg.com https://*.google.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; media-src 'self' https://*.blob.core.windows.net; frame-src https://*.youtube.com https://*.youtube-nocookie.com https://www.google.com https://maps.google.com;"
     }
 }

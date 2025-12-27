@@ -1,0 +1,196 @@
+@* Contact Section Component *@
+@using SSCA.website.Shared.Models
+@inject HttpClient Http
+
+<section id="contact" class="section contact-section">
+    <div class="container">
+        <div class="contact-header">
+            <h2>联系我们</h2>
+            <p>Contact Us</p>
+        </div>
+        
+        <div class="contact-layout">
+            <div class="contact-info-side">
+                <div class="contact-grid-vertical">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <span class="material-symbols-outlined">mail</span>
+                        </div>
+                        <h3>电邮</h3>
+                        <p>Email</p>
+                        <a href="mailto:office@ssca-bc.org" class="contact-link">office@ssca-bc.org</a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <span class="material-symbols-outlined">call</span>
+                        </div>
+                        <h3>电话</h3>
+                        <p>Phone</p>
+                        <a href="tel:+16047839158" class="contact-link">604-783-9158</a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </div>
+                        <h3>地址</h3>
+                        <p>Address</p>
+                        <address class="contact-address">
+                            17029 - 16th Avenue,<br />
+                            Surrey, BC,<br />
+                            Canada V3S 9M5
+                        </address>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-form-side">
+                <div class="contact-form-card">
+                    <h3>发送消息</h3>
+                    <p>Send us a message</p>
+                    
+                    @if (isSubmitted)
+                    {
+                        <div class="form-success">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <p>感谢您的留言！我们会尽快回复您。</p>
+                            <p>Thank you for your message! We'll get back to you soon.</p>
+                            <button class="btn btn-primary btn-md" @onclick="ResetForm">发送新消息</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@contactForm" OnValidSubmit="HandleSubmit">
+                            <DataAnnotationsValidator />
+                            
+                            <div class="form-group">
+                                <label for="name">姓名 / Name *</label>
+                                <InputText id="name" @bind-Value="contactForm.Name" placeholder="请输入您的姓名" />
+                                <ValidationMessage For="@(() => contactForm.Name)" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">电邮 / Email *</label>
+                                <InputText id="email" @bind-Value="contactForm.Email" placeholder="请输入您的电邮地址" type="email" />
+                                <ValidationMessage For="@(() => contactForm.Email)" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">电话 / Phone</label>
+                                <InputText id="phone" @bind-Value="contactForm.Phone" placeholder="请输入您的电话号码 (可选)" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="message">留言 / Message *</label>
+                                <InputTextArea id="message" @bind-Value="contactForm.Message" placeholder="请输入您的留言" rows="5" />
+                                <ValidationMessage For="@(() => contactForm.Message)" />
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="form-error">
+                                    <span class="material-symbols-outlined">error</span>
+                                    <span>@errorMessage</span>
+                                </div>
+                            }
+                            
+                            <button type="submit" class="btn btn-primary btn-md submit-btn" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="material-symbols-outlined spinning">progress_activity</span>
+                                    <span>发送中...</span>
+                                }
+                                else
+                                {
+                                    <span class="material-symbols-outlined">send</span>
+                                    <span>发送消息</span>
+                                }
+                            </button>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="contact-map">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2614.8!2d-122.7786!3d49.0356!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x5485c5c0d7f8d8d9%3A0x5c8c8c8c8c8c8c8c!2s17029%2016%20Ave%2C%20Surrey%2C%20BC%20V3S%209M5!5e0!3m2!1sen!2sca!4v1703000000000" 
+                width="100%" 
+                height="300" 
+                style="border:0; border-radius: 0.75rem;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+    </div>
+</section>
+
+@code {
+    private ContactFormModel contactForm = new();
+    private bool isSubmitting = false;
+    private bool isSubmitted = false;
+    private string? errorMessage = null;
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        
+        try
+        {
+            var request = new ContactMessageRequest
+            {
+                Name = contactForm.Name,
+                Email = contactForm.Email,
+                Phone = contactForm.Phone,
+                Message = contactForm.Message
+            };
+
+            var response = await Http.PostAsJsonAsync("/api/contact", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                isSubmitted = true;
+            }
+            else
+            {
+                var result = await response.Content.ReadFromJsonAsync<ContactMessageResponse>();
+                errorMessage = result?.Message ?? "发送失败，请稍后重试 / Failed to send, please try again";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "网络错误，请稍后重试 / Network error, please try again";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        contactForm = new ContactFormModel();
+        isSubmitted = false;
+        errorMessage = null;
+    }
+
+    public class ContactFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "请输入姓名 / Name is required")]
+        public string Name { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "请输入电邮 / Email is required")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "请输入有效的电邮地址 / Please enter a valid email")]
+        public string Email { get; set; } = string.Empty;
+
+        public string? Phone { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "请输入留言 / Message is required")]
+        [System.ComponentModel.DataAnnotations.MinLength(10, ErrorMessage = "留言至少需要10个字符 / Message must be at least 10 characters")]
+        public string Message { get; set; } = string.Empty;
+    }
+}
+

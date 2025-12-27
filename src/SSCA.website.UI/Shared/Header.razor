@@ -18,7 +18,7 @@
             <a href="/sunday-messages">主日信息</a>
             <a href="/gospel-meetings">福音聚会</a>
             <a href="/special-meetings">特别聚会</a>
-            <a href="#contact">联系我们</a>
+            <a href="/contact">联系我们</a>
             @if (isAuthenticated)
             {
                 <a href="/mgmt/meetings">管理聚会</a>
@@ -55,7 +55,7 @@
                 <a href="/sunday-messages" @onclick="CloseMobileMenu">主日信息</a>
                 <a href="/gospel-meetings" @onclick="CloseMobileMenu">福音聚会</a>
                 <a href="/special-meetings" @onclick="CloseMobileMenu">特别聚会</a>
-                <a href="#contact" @onclick="CloseMobileMenu">联系我们</a>
+                <a href="/contact" @onclick="CloseMobileMenu">联系我们</a>
                 @if (isAuthenticated)
                 {
                     <a href="/mgmt/meetings" @onclick="CloseMobileMenu">管理聚会</a>
