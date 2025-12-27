@@ -21,11 +21,42 @@
 - Navigation: Home, 主日信息, 福音聚会, 特别聚会, 联系我们
 - Hero: "南素里基督教会" headline
 - CTA Buttons: "2025一年读经一遍", "Sunday Bulletin 主日单张"
-- Login Button: "登陆"
 
 ### Backend Updates (December 2024)
 1. **Automatic Database Migration** - Configured `Program.cs` in the API project to automatically apply EF Core migrations on application startup. This ensures the database schema is always up-to-date without requiring manual CI/CD steps.
 2. **Framework Compatibility** - Addressed .NET SDK version mismatches by targeting .NET 8.0 for compatibility with Azure Static Web Apps.
+
+### Mobile Menu & Authentication (December 27, 2024)
+
+#### Mobile Menu Feature
+1. **Responsive Menu Button** - Added hamburger menu button that:
+   - Hidden on desktop (≥768px) using `hidden-desktop` class
+   - Visible on mobile (<768px)
+   - Toggles between "menu" and "close" icons
+2. **Mobile Menu Dropdown** - Slide-down menu panel with:
+   - All navigation links (Home, 主日信息, 福音聚会, 特别聚会, 联系我们)
+   - Smooth slide-down animation
+   - Dark mode support
+   - Closes when a link is clicked
+
+#### Authentication UI
+1. **Login/Logout Button** - Replaced static "登陆" button with dynamic authentication:
+   - Shows "Login" button when not authenticated (links to `/.auth/login/aad`)
+   - Shows username + "Logout" button when authenticated
+2. **Admin Link** - Added "管理聚会" link in navigation:
+   - Only visible when user is authenticated
+   - Links to `/mgmt/meetings` admin page
+   - Appears in both desktop and mobile menus
+3. **Azure Static Web Apps Integration** - Uses `/.auth/me` endpoint to check authentication state on component initialization
+
+#### New CSS Classes
+- `.mobile-menu-btn` - Hamburger menu button styling
+- `.mobile-menu` - Dropdown menu container with animation
+- `.mobile-nav` - Vertical navigation links
+- `.mobile-login-btn` - Full-width login button in mobile menu
+- `.user-info` - Desktop user display (name + logout)
+- `.user-name` - Username text styling
+- `.mobile-user-info` - Mobile user display
 
 ---
 
@@ -83,25 +114,25 @@ SSCA.website.UI/
 ├── Program.cs                # WebAssembly host configuration
 ├── _Imports.razor            # Global using statements
 ├── SSCA_BC.csproj            # Project file
-│
+
 ├── Layout/
 │   ├── MainLayout.razor      # Main page layout (Header + Content + Footer)
 │   └── MainLayout.razor.css  # Scoped layout styles
-│
+
 ├── Pages/
 │   ├── Home.razor            # Landing page (/, composes sections)
 │   └── NotFound.razor        # 404 error page
-│
+
 ├── Shared/
 │   ├── Header.razor          # Sticky header with nav & branding
 │   └── Footer.razor          # Footer with links & contact info
-│
+
 ├── Components/
 │   ├── HeroSection.razor     # Hero banner with background & CTAs
 │   ├── AboutSection.razor    # About organization section
 │   ├── NewsCard.razor        # Reusable news/event card
 │   └── NewsEventsSection.razor # Grid of news cards
-│
+
 └── wwwroot/
     ├── index.html            # HTML entry point
     └── css/
@@ -117,7 +148,7 @@ SSCA.website.UI/
 | Component | Purpose | Key Features |
 |-----------|---------|--------------|
 | **MainLayout** | Page wrapper | Flexbox structure, includes Header & Footer |
-| **Header** | Navigation | Sticky header, logo, nav menu, login button, mobile menu |
+| **Header** | Navigation | Sticky header, logo, nav menu, login/logout, mobile menu, auth state |
 | **Footer** | Site footer | 3-column grid, social links, contact info, copyright |
 
 ### Page Sections
@@ -195,8 +226,8 @@ dotnet run      # Start dev server at http://localhost:5227
 ## Future Enhancements
 
 - [ ] Dark mode toggle button
-- [ ] Functional mobile hamburger menu
-- [ ] Dynamic content from API/database
-- [ ] Additional pages (主日信息, 福音聚会, etc.)
-- [ ] User authentication (登陆 functionality)
+- [x] ~~Functional mobile hamburger menu~~ ✅ Completed Dec 27, 2024
+- [x] ~~Dynamic content from API/database~~ ✅ Meeting pages implemented
+- [x] ~~Additional pages (主日信息, 福音聚会, etc.)~~ ✅ Completed
+- [x] ~~User authentication (登陆 functionality)~~ ✅ Completed Dec 27, 2024
 - [ ] Chinese/English language toggle
