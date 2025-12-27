@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature allows website visitors to send messages directly through the contact page. Messages are submitted via a web form and processed by the backend API, which can then send email notifications to the church office.
+This feature allows website visitors to send messages directly through the contact page. Messages are submitted via a web form and processed by the backend API, which sends email notifications to the church office via Gmail SMTP.
 
 ## Architecture
 
@@ -17,13 +17,13 @@ This feature allows website visitors to send messages directly through the conta
                                                              ▼
                                                   ┌─────────────────────┐
                                                   │    EmailService     │
-                                                  │  (Logs / SendGrid)  │
+                                                  │  (MailKit / SMTP)   │
                                                   └──────────┬──────────┘
                                                              │
                                                              ▼
                                                   ┌─────────────────────┐
-                                                  │  Application        │
-                                                  │  Insights / Email   │
+                                                  │    Gmail SMTP       │
+                                                  │  (smtp.gmail.com)   │
                                                   └─────────────────────┘
 ```
 
@@ -56,9 +56,9 @@ This feature allows website visitors to send messages directly through the conta
 **File:** `src/SSCA.website.API/Services/EmailService.cs`
 
 - `IEmailService` interface
-- `EmailService` implementation
-- Currently logs messages to Application Insights
-- Ready for SendGrid/Azure Communication Services integration
+- `EmailService` implementation using **MailKit** for SMTP
+- Sends formatted HTML and plain text emails via Gmail SMTP
+- Falls back to logging if SMTP not configured
 
 ### Shared Models
 
@@ -140,55 +140,79 @@ Contact form styles are defined in `src/SSCA.website.UI/wwwroot/css/app.css`:
 
 ## Configuration
 
-### Email Recipient
+### Required Settings (Azure Static Web App → Configuration)
 
-Set in API configuration:
+Add these settings in **Azure Portal** → **Static Web App** → **Configuration**:
+
+| Setting Name | Value | Description |
+|--------------|-------|-------------|
+| `Smtp__Host` | `smtp.gmail.com` | Gmail SMTP server |
+| `Smtp__Port` | `587` | SMTP port with TLS |
+| `Smtp__Username` | `tech@ssca-bc.org` | Gmail account |
+| `Smtp__Password` | `[App Password]` | Gmail App Password (see below) |
+| `Smtp__FromEmail` | `tech@ssca-bc.org` | Sender email address |
+| `Smtp__FromName` | `SSCA-BC Website` | Sender display name |
+| `ContactEmail` | `tech@ssca-bc.org` | Recipient email |
+
+### Local Development Configuration
+
+Copy `local.settings.template.json` to `local.settings.json` and update:
+
 ```json
 {
+  "Values": {
+    "Smtp__Host": "smtp.gmail.com",
+    "Smtp__Port": "587",
+    "Smtp__Username": "tech@ssca-bc.org",
+    "Smtp__Password": "YOUR_GMAIL_APP_PASSWORD",
+    "Smtp__FromEmail": "tech@ssca-bc.org",
+    "Smtp__FromName": "SSCA-BC Website",
     "ContactEmail": "tech@ssca-bc.org"
+  }
 }
 ```
 
-Default: `tech@ssca-bc.org`
+## Gmail App Password Setup
 
-## Future Enhancements
+Gmail requires an **App Password** (not your regular password) for SMTP:
 
-### Email Integration Options
+### Steps:
 
-1. **SendGrid** (Recommended)
-   - Add package: `SendGrid`
-   - Configure API key in app settings
-   - Update `EmailService` to send actual emails
+1. **Enable 2-Factor Authentication**
+   - Go to [myaccount.google.com/security](https://myaccount.google.com/security)
+   - Enable **2-Step Verification**
 
-2. **Azure Communication Services**
-   - Add package: `Azure.Communication.Email`
-   - Configure connection string
-   - Update `EmailService` implementation
+2. **Generate App Password**
+   - Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+   - Select app: "Mail"
+   - Select device: "Other (Custom name)"
+   - Enter: "SSCA Website"
+   - Click **Generate**
 
-3. **SMTP**
-   - Use `System.Net.Mail.SmtpClient`
-   - Configure SMTP server settings
+3. **Copy the 16-character password**
+   - Use this as `Smtp__Password` in configuration
+   - Format: `xxxx xxxx xxxx xxxx` (spaces optional)
 
-### Example SendGrid Implementation
+⚠️ **Important:** Never commit App Passwords to git!
 
-```csharp
-public async Task<bool> SendContactMessageAsync(ContactMessageRequest request)
-{
-    var apiKey = _configuration["SendGrid:ApiKey"];
-    var client = new SendGridClient(apiKey);
-    
-    var from = new EmailAddress("noreply@ssca-bc.org", "SSCA-BC Website");
-    var to = new EmailAddress(_configuration["ContactEmail"]);
-    var subject = $"网站留言 - 来自 {request.Name}";
-    var plainText = $"姓名: {request.Name}\n电邮: {request.Email}\n电话: {request.Phone}\n\n留言:\n{request.Message}";
-    
-    var msg = MailHelper.CreateSingleEmail(from, to, subject, plainText, null);
-    var response = await client.SendEmailAsync(msg);
-    
-    return response.StatusCode == HttpStatusCode.OK 
-        || response.StatusCode == HttpStatusCode.Accepted;
-}
+## Email Format
+
+Emails are sent with both HTML and plain text versions:
+
+### HTML Email Features:
+- Branded header with gradient
+- Formatted fields (Name, Email, Phone, Message)
+- Clickable email link
+- Professional footer
+- Mobile-responsive design
+
+### Email Subject:
 ```
+网站留言 - 来自 [Name]
+```
+
+### Reply-To:
+The sender's email is set as Reply-To, so you can respond directly.
 
 ## Testing
 
@@ -208,22 +232,50 @@ public async Task<bool> SendContactMessageAsync(ContactMessageRequest request)
 
 3. Navigate to `http://localhost:5227/contact`
 
-4. Submit test message - check Application Insights logs
+4. Submit test message - check your inbox!
 
-### Production
+### Fallback Behavior
 
-Messages are logged to Azure Application Insights. View logs in Azure Portal → Application Insights → Logs.
+If SMTP is not configured, the service will:
+- Log a warning: "SMTP not configured. Logging message instead of sending email."
+- Log the full message content to Application Insights
+- Return success to the user (message is recorded)
 
-Query:
+## Troubleshooting
+
+### Common Issues
+
+1. **"Authentication failed"**
+   - Verify you're using an App Password, not regular password
+   - Check 2FA is enabled on the Gmail account
+   - Verify username is correct
+
+2. **"Connection refused"**
+   - Check SMTP host and port settings
+   - Verify firewall allows outbound port 587
+
+3. **Emails not received**
+   - Check spam folder
+   - Verify ContactEmail setting
+   - Check Application Insights logs for errors
+
+### Application Insights Query
+
 ```kusto
 traces
-| where message contains "Contact form submission"
+| where message contains "Contact email"
 | order by timestamp desc
 ```
 
 ## Security Considerations
 
-- Rate limiting should be implemented to prevent spam
-- Consider adding CAPTCHA for bot protection
-- Validate and sanitize all input on the server
-- Do not expose internal error details to clients
+- ✅ App Password stored in Azure Configuration (secure)
+- ✅ HTML content is escaped to prevent XSS
+- ✅ Input validated on both client and server
+- ⚠️ Consider adding rate limiting to prevent spam
+- ⚠️ Consider adding CAPTCHA for bot protection
+
+## Dependencies
+
+- **MailKit** - Modern .NET email library for SMTP
+- **MimeKit** - Email message creation (included with MailKit)

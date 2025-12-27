@@ -35,7 +35,6 @@
 ### 2.2 Create Email Service
 - [x] `IEmailService` interface
 - [x] `EmailService` implementation
-- [x] Logging to Application Insights
 - [x] Register in DI container
 
 ### 2.3 Create Contact Function
@@ -50,19 +49,20 @@
 - [x] Display error messages
 - [x] Network error handling
 
-## Phase 3: Email Integration (Future)
+## Phase 3: Email Integration (Completed ✅)
 
-### 3.1 SendGrid Setup
-- [ ] Add SendGrid package
-- [ ] Create SendGrid account
-- [ ] Configure API key in Azure Static Web App settings
-- [ ] Update `EmailService` to send emails
+### 3.1 SMTP with Gmail
+- [x] Add MailKit package
+- [x] Implement SMTP email sending
+- [x] HTML email template with branding
+- [x] Plain text fallback
+- [x] Reply-To header for easy response
+- [x] Fallback to logging if SMTP not configured
 
-### 3.2 Email Template
-- [ ] Design HTML email template
-- [ ] Include all form fields
-- [ ] Add church branding
-- [ ] Test email delivery
+### 3.2 Configuration
+- [x] Update `local.settings.template.json` with SMTP settings
+- [x] Document Gmail App Password setup
+- [x] Update README with configuration guide
 
 ## Phase 4: Security Enhancements (Future)
 
@@ -77,8 +77,7 @@
 - [ ] Verify token on backend
 
 ### 4.3 Input Sanitization
-- [ ] Sanitize HTML in messages
-- [ ] Prevent XSS attacks
+- [x] HTML escape in email body
 - [ ] Log suspicious submissions
 
 ## Files Changed
@@ -97,6 +96,29 @@
 - `src/SSCA.website.UI/wwwroot/staticwebapp.config.json` - Added Google Maps CSP
 - `src/SSCA.website.UI/Shared/Header.razor` - Updated nav links
 - `src/SSCA.website.API/Program.cs` - Registered EmailService
+- `src/SSCA.website.API/SSCA.website.API.csproj` - Added MailKit package
+- `src/SSCA.website.API/local.settings.template.json` - Added SMTP config
+
+## Configuration Required
+
+### Azure Static Web App Settings
+
+| Setting | Value |
+|---------|-------|
+| `Smtp__Host` | `smtp.gmail.com` |
+| `Smtp__Port` | `587` |
+| `Smtp__Username` | `tech@ssca-bc.org` |
+| `Smtp__Password` | `[Gmail App Password]` |
+| `Smtp__FromEmail` | `tech@ssca-bc.org` |
+| `Smtp__FromName` | `SSCA-BC Website` |
+| `ContactEmail` | `tech@ssca-bc.org` |
+
+### Gmail App Password
+
+1. Enable 2FA on Gmail account
+2. Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+3. Generate App Password for "Mail"
+4. Use the 16-character password in `Smtp__Password`
 
 ## Testing Checklist
 
@@ -106,5 +128,13 @@
 - [x] Success message shows after submission
 - [x] "Send New Message" resets form
 - [x] API endpoint builds successfully
+- [x] HTML email template renders correctly
 - [ ] E2E test with deployed API
-- [ ] Email delivery test (after SendGrid integration)
+- [ ] Email delivery test in production
+
+## Dependencies Added
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| MailKit | Latest | SMTP email sending |
+| MimeKit | (with MailKit) | Email message creation |

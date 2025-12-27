@@ -2,7 +2,14 @@
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ContactEmail": "tech@ssca-bc.org",
+    "Smtp__Host": "smtp.office365.com",
+    "Smtp__Port": "587",
+    "Smtp__Username": "YOUR_M365_EMAIL",
+    "Smtp__Password": "YOUR_M365_PASSWORD_OR_APP_PASSWORD",
+    "Smtp__FromEmail": "YOUR_M365_EMAIL",
+    "Smtp__FromName": "SSCA-BC Website"
   },
   "ConnectionStrings": {
     "PostgreSQL": "Host=localhost;Database=ssca;Username=postgres;Password=YOUR_PASSWORD",
