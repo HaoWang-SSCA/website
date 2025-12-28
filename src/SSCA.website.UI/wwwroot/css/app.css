@@ -127,9 +127,14 @@ h3 {
 }
 
 .logo {
-    width: 2rem;
-    height: 2rem;
-    color: var(--primary);
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .brand-text h2 {
@@ -1880,4 +1885,92 @@ textarea.invalid {
 .btn-video.active {
     background-color: var(--primary);
     color: white;
+}
+
+/* Features Section (Faith/Hope/Mission) */
+.features-section {
+    background: white;
+}
+
+.dark .features-section {
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.features-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: var(--bg-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--slate-200);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .feature-card {
+    background: var(--slate-800);
+    border-color: var(--slate-700);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #1a5fb4);
+    color: white;
+    margin-bottom: 1.25rem;
+}
+
+.feature-icon .material-symbols-outlined {
+    font-size: 2rem;
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.feature-card h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+/* Hero Subtitle */
+.hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
 }
