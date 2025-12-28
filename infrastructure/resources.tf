@@ -25,8 +25,8 @@ resource "azurerm_static_web_app" "website" {
   app_settings = merge(
     {
       "ConnectionStrings__PostgreSQL"         = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
-      "ConnectionStrings__AzureStorage"       = azurerm_storage_account.audio.primary_connection_string
-      "AzureStorage__BaseUrl"                 = trimsuffix(azurerm_storage_account.audio.primary_blob_endpoint, "/")
+      "ConnectionStrings__AzureStorage"       = azurerm_storage_account.media.primary_connection_string
+      "AzureStorage__BaseUrl"                 = trimsuffix(azurerm_storage_account.media.primary_blob_endpoint, "/")
       "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
       "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
     },
@@ -76,10 +76,10 @@ resource "azurerm_postgresql_flexible_server_database" "ssca" {
 }
 
 # ============================================
-# Azure Storage Account (for audio files)
+# Azure Storage Account (for media files)
 # ============================================
-resource "azurerm_storage_account" "audio" {
-  name                     = "${replace(var.project_name, "-", "")}audio${random_string.suffix.result}"
+resource "azurerm_storage_account" "media" {
+  name                     = "${replace(var.project_name, "-", "")}media${random_string.suffix.result}"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = var.location
   account_tier             = var.storage_account_tier
@@ -88,7 +88,7 @@ resource "azurerm_storage_account" "audio" {
   blob_properties {
     cors_rule {
       allowed_headers    = ["*"]
-      allowed_methods    = ["GET", "HEAD", "OPTIONS"]
+      allowed_methods    = ["GET", "HEAD", "OPTIONS", "POST", "PUT"]
       allowed_origins    = ["*"] # Update with your domain in production
       exposed_headers    = ["*"]
       max_age_in_seconds = 3600
@@ -101,8 +101,15 @@ resource "azurerm_storage_account" "audio" {
 # Blob container for audio files
 resource "azurerm_storage_container" "audio_files" {
   name                  = "audio-files"
-  storage_account_name  = azurerm_storage_account.audio.name
+  storage_account_name  = azurerm_storage_account.media.name
   container_access_type = "blob" # Public read access for audio files
+}
+
+# Blob container for bulletins
+resource "azurerm_storage_container" "bulletin" {
+  name                  = "bulletin"
+  storage_account_name  = azurerm_storage_account.media.name
+  container_access_type = "blob" # Public read access for bulletins
 }
 
 # ============================================

@@ -43,23 +43,28 @@ output "postgres_connection_string" {
 # Storage Account
 output "storage_account_name" {
   description = "The name of the storage account"
-  value       = azurerm_storage_account.audio.name
+  value       = azurerm_storage_account.media.name
 }
 
 output "storage_account_connection_string" {
   description = "Storage account connection string"
-  value       = azurerm_storage_account.audio.primary_connection_string
+  value       = azurerm_storage_account.media.primary_connection_string
   sensitive   = true
 }
 
 output "storage_blob_endpoint" {
   description = "Storage blob endpoint URL"
-  value       = azurerm_storage_account.audio.primary_blob_endpoint
+  value       = azurerm_storage_account.media.primary_blob_endpoint
 }
 
 output "audio_container_url" {
   description = "Audio files container URL"
-  value       = "${azurerm_storage_account.audio.primary_blob_endpoint}audio-files"
+  value       = "${azurerm_storage_account.media.primary_blob_endpoint}audio-files"
+}
+
+output "bulletin_container_url" {
+  description = "Bulletin container URL"
+  value       = "${azurerm_storage_account.media.primary_blob_endpoint}bulletin"
 }
 
 # App Configuration Summary
@@ -67,6 +72,6 @@ output "app_configuration" {
   description = "Configuration values needed for the application"
   value = {
     static_web_app_url = "https://${azurerm_static_web_app.website.default_host_name}"
-    storage_base_url   = azurerm_storage_account.audio.primary_blob_endpoint
+    storage_base_url   = azurerm_storage_account.media.primary_blob_endpoint
   }
 }

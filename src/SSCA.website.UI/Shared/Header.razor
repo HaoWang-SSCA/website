@@ -20,6 +20,7 @@
             @if (isAuthenticated)
             {
                 <a href="/mgmt/meetings">管理聚会</a>
+                <a href="/mgmt/bulletin">管理单张</a>
             }
         </nav>
         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -57,6 +58,7 @@
                 @if (isAuthenticated)
                 {
                     <a href="/mgmt/meetings" @onclick="CloseMobileMenu">管理聚会</a>
+                    <a href="/mgmt/bulletin" @onclick="CloseMobileMenu">管理单张</a>
                 }
             </nav>
             @if (isAuthenticated)

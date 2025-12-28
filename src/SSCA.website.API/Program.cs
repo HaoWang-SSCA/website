@@ -30,6 +30,9 @@ var host = new HostBuilder()
         // Add EmailService
         services.AddScoped<IEmailService, EmailService>();
 
+        // Add FileStorageService
+        services.AddScoped<IFileStorageService, FileStorageService>();
+
         // Add Azure Blob Storage
         services.AddSingleton(sp =>
         {

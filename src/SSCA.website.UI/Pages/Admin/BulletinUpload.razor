@@ -1,0 +1,233 @@
+@page "/mgmt/bulletin"
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <div>
+                <h1 class="page-title">管理主日单张</h1>
+                <p class="page-subtitle">Manage Sunday Bulletin</p>
+            </div>
+            <a href="/mgmt/meetings" class="btn btn-secondary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                返回列表 Back to List
+            </a>
+        </div>
+
+        <div class="upload-card">
+            <div class="card-body">
+                <h3>上传主日单张 (PDF)</h3>
+                <p class="text-secondary">上传后的单张将直接更新到首页的"主日单张"链接和二维码中。</p>
+                
+                <div class="upload-zone.custom">
+                    <InputFile OnChange="HandleFileSelected" accept=".pdf" class="file-input" id="bulletin-upload" />
+                    <label for="bulletin-upload" class="upload-label">
+                        <span class="material-symbols-outlined">cloud_upload</span>
+                        <span>@(selectedFile?.Name ?? "点击或拖拽上传 PDF 文件")</span>
+                    </label>
+                </div>
+
+                @if (isUploading)
+                {
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @(uploadProgress)%"></div>
+                        </div>
+                        <p>正在上传... @uploadProgress%</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(statusMessage))
+                {
+                    <div class="alert @(statusClass)">
+                        <span class="material-symbols-outlined">@(statusClass == "alert-success" ? "check_circle" : "error")</span>
+                        <span>@statusMessage</span>
+                    </div>
+                }
+
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button class="btn btn-primary" @onclick="UploadBulletin" disabled="@(selectedFile == null || isUploading)">
+                        <span class="material-symbols-outlined">upload</span>
+                        开始上传 Start Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(currentBulletinUrl))
+        {
+            <div class="current-bulletin" style="margin-top: 2rem;">
+                <h3>当前单张预览</h3>
+                <div class="bulletin-preview-actions">
+                    <a href="@currentBulletinUrl" target="_blank" class="btn btn-outline">
+                        <span class="material-symbols-outlined">open_in_new</span>
+                        查看当前 PDF
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .upload-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border: 1px solid var(--slate-200);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .dark .upload-card {
+        background: var(--slate-800);
+        border-color: var(--slate-700);
+    }
+
+    .upload-zone.custom {
+        margin: 2rem 0;
+        position: relative;
+    }
+
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        border: 2px dashed var(--slate-300);
+        border-radius: 0.75rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .dark .upload-label {
+        border-color: var(--slate-600);
+    }
+
+    .upload-zone.custom:hover .upload-label {
+        border-color: var(--primary);
+        background: rgba(19, 127, 236, 0.05);
+        color: var(--primary);
+    }
+
+    .upload-label .material-symbols-outlined {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: var(--slate-100);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        transition: width 0.3s ease;
+    }
+</style>
+
+@inject IConfiguration Configuration
+
+@code {
+    private IBrowserFile? selectedFile;
+    private bool isUploading;
+    private int uploadProgress;
+    private string? statusMessage;
+    private string statusClass = "";
+    private string? currentBulletinUrl;
+
+    protected override void OnInitialized()
+    {
+        var baseUrl = Configuration["AzureStorage:BaseUrl"] ?? "";
+        currentBulletinUrl = $"{baseUrl.TrimEnd('/')}/bulletin/SundayBulletin.pdf";
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        statusMessage = null;
+        
+        if (selectedFile.ContentType != "application/pdf")
+        {
+            statusMessage = "请选择 PDF 文件。 Please select a PDF file.";
+            statusClass = "alert-error";
+            selectedFile = null;
+        }
+    }
+
+    private async Task UploadBulletin()
+    {
+        if (selectedFile == null) return;
+
+        isUploading = true;
+        uploadProgress = 0;
+        statusMessage = null;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(selectedFile.OpenReadStream(10 * 1024 * 1024)); // 10MB max
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
+            
+            content.Add(fileContent, "file", selectedFile.Name);
+
+            // Mock progress for better UX
+            _ = UpdateProgress();
+
+            var response = await Http.PostAsync("api/mgmt/bulletin-upload", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = "上传成功！单张已更新。 Upload successful!";
+                statusClass = "alert-success";
+                selectedFile = null;
+                uploadProgress = 100;
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                statusMessage = $"上传失败 Upload failed: {error}";
+                statusClass = "alert-error";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"发生错误 Error: {ex.Message}";
+            statusClass = "alert-error";
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private async Task UpdateProgress()
+    {
+        while (isUploading && uploadProgress < 90)
+        {
+            await Task.Delay(500);
+            if (isUploading)
+            {
+                uploadProgress += 5;
+                StateHasChanged();
+            }
+        }
+    }
+}
