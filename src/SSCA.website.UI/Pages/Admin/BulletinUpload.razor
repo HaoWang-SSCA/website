@@ -155,8 +155,7 @@
 
     protected override void OnInitialized()
     {
-        var baseUrl = Configuration["AzureStorage:BaseUrl"] ?? "";
-        currentBulletinUrl = $"{baseUrl.TrimEnd('/')}/bulletin/SundayBulletin.pdf";
+        currentBulletinUrl = "bulletin/SundayBulletin.pdf";
     }
 
     private void HandleFileSelected(InputFileChangeEventArgs e)
