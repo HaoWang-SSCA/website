@@ -33,17 +33,20 @@ Implemented a complete workflow for managing and displaying the weekly Sunday Bu
 ### API Implementation
 - Created `FileStorageService` for reusable Azure Blob Storage logic.
 - Implemented `BulletinFunction` (POST `/api/mgmt/bulletin-upload`) to handle PDF uploads.
+- **API Proxy**: Added a public endpoint to serve the bulletin PDF through the site's primary domain.
 
 ### Admin Management
 - Created `/mgmt/bulletin` page for authenticated users.
 - Supports PDF selection, upload with progress feedback, and preview.
 - Added navigation link "管理单张" in the header.
 
-### Public Display (Hero Section)
-- **Clickable QR Code**: The bulletin icon/button was removed and replaced by a high-visibility, clickable QR Code container.
-- **Enhanced Visibility**: The QR code now sits on a solid, pure-white background with a distinct shadow, ensuring it doesn't look "greyed out" against the hero background image.
+### 4. Public Display (Hero Section)
+- **Domain-Consistent Access**: The bulletin is now accessible via the main site domain (e.g., `ssca-bc.org/bulletin/SundayBulletin.pdf`). 
+- **API Proxy**: An API endpoint fetches the PDF from Blob Storage and serves it through the site's URL, keeping the user on the primary domain.
+- **Routing**: Configured `staticwebapp.config.json` to rewrite `/bulletin/*` requests to the API proxy.
+- **Clickable QR Code**: The high-visibility QR Code container is clickable and links directly to the domain-consistent URL.
+- **Dynamic QR Generation**: The QR code is dynamically generated based on the site's current domain, ensuring it works in both local development and production.
 - **User Hint**: Added a clear "点击打开 PDF" (Click to open PDF) hint below the QR code for desktop users.
-- **Mobile Friendly**: Congregants can scan the code with their mobile devices to instantly access the PDF.
 
 ---
 

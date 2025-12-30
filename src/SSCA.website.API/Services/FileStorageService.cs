@@ -7,6 +7,7 @@ namespace SSCA.website.API.Services;
 public interface IFileStorageService
 {
     Task<string> UploadFileAsync(Stream fileStream, string fileName, string containerName, string contentType);
+    Task<Stream?> DownloadFileAsync(string fileName, string containerName);
     Task<bool> DeleteFileAsync(string fileName, string containerName);
 }
 
@@ -39,6 +40,20 @@ public class FileStorageService : IFileStorageService
         await blobClient.UploadAsync(fileStream, options);
 
         return blobClient.Uri.ToString();
+    }
+
+    public async Task<Stream?> DownloadFileAsync(string fileName, string containerName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(fileName);
+
+        if (!await blobClient.ExistsAsync())
+        {
+            return null;
+        }
+
+        var response = await blobClient.DownloadStreamingAsync();
+        return response.Value.Content;
     }
 
     public async Task<bool> DeleteFileAsync(string fileName, string containerName)

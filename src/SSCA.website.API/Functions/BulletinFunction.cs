@@ -37,4 +37,18 @@ public class BulletinFunction
 
         return new OkObjectResult(new { url });
     }
+
+    [Function("GetBulletin")]
+    public async Task<IActionResult> GetBulletin(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "bulletin-file/{name}")] HttpRequest req,
+        string name)
+    {
+        var stream = await _fileStorageService.DownloadFileAsync(name, "bulletin");
+        if (stream == null)
+        {
+            return new NotFoundResult();
+        }
+
+        return new FileStreamResult(stream, "application/pdf");
+    }
 }

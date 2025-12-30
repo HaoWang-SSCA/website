@@ -23,7 +23,8 @@
                 <a href="@bulletinUrl" target="_blank" rel="noopener noreferrer" class="bulletin-qr-link">
                     <div class="bulletin-qr-code">
                         <div class="qr-image-wrapper">
-                            <img src="/images/sundaybulletin.png" alt="Bulletin QR Code" />
+                            @* Use the generated QR code or a static image if you prefer *@
+                            <img src="@qrCodeUrl" alt="Bulletin QR Code" />
                         </div>
                         <span class="qr-label">扫码查看主日单张</span>
                         <div class="qr-viewer-hint">
@@ -132,6 +133,7 @@
 </style>
 
 @inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 
 @code {
     private string? bulletinUrl;
@@ -139,8 +141,13 @@
 
     protected override void OnInitialized()
     {        
-        bulletinUrl = "https://ssca-bc.org/bulletin/SundayBulletin.pdf";
-        // Use a slightly larger size and no background for the QR itself to ensure clarity on our white container
-        qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(bulletinUrl)}&bgcolor=ffffff";
+        // Use relative URL to keep it under the same domain
+        bulletinUrl = "bulletin/SundayBulletin.pdf";
+        
+        // Get the absolute URL for the QR code generator
+        var absoluteBulletinUrl = NavigationManager.ToAbsoluteUri(bulletinUrl).ToString();
+        
+        // Generate QR code using the absolute URL
+        qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(absoluteBulletinUrl)}&bgcolor=ffffff";
     }
 }
