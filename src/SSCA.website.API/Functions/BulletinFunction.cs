@@ -40,7 +40,7 @@ public class BulletinFunction
 
     [Function("GetBulletin")]
     public async Task<IActionResult> GetBulletin(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "bulletin-file/{name}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "bulletin-file/{*name}")] HttpRequest req,
         string name)
     {
         var stream = await _fileStorageService.DownloadFileAsync(name, "bulletin");

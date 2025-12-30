@@ -141,8 +141,8 @@
 
     protected override void OnInitialized()
     {        
-        // Use relative URL to keep it under the same domain
-        bulletinUrl = "bulletin/SundayBulletin.pdf";
+        // Use relative URL with leading slash to ensure it works from any page
+        bulletinUrl = "/bulletin/SundayBulletin.pdf";
         
         // Get the absolute URL for the QR code generator
         var absoluteBulletinUrl = NavigationManager.ToAbsoluteUri(bulletinUrl).ToString();
