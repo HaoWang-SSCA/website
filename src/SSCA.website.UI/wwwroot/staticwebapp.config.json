@@ -12,10 +12,6 @@
             "allowedRoles": [
                 "authenticated"
             ]
-        },
-        {
-            "route": "/bulletin/{name}",
-            "rewrite": "/api/bulletin-file/{name}"
         }
     ],
     "navigationFallback": {

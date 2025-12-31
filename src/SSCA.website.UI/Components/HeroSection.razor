@@ -142,7 +142,7 @@
     protected override void OnInitialized()
     {        
         // Use relative URL with leading slash to ensure it works from any page
-        bulletinUrl = "/bulletin/SundayBulletin.pdf";
+        bulletinUrl = "/api/bulletin/SundayBulletin.pdf";
         
         // Get the absolute URL for the QR code generator
         var absoluteBulletinUrl = NavigationManager.ToAbsoluteUri(bulletinUrl).ToString();
