@@ -2,7 +2,7 @@
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<header class="header">
+<header class="header header-admin">
     <div class="container header-content">
         <div class="logo-container">
             <div class="logo">
@@ -10,19 +10,13 @@
             </div>
             <div class="brand-text">
                 <h2>SSCA-BC</h2>
-                <h3>南素里基督教会</h3>
+                <h3>南素里基督教会 (Admin)</h3>
             </div>
         </div>
         <nav class="nav hidden-mobile">
-            <a href="/" class="@(IsActive("/") ? "active" : "")">Home</a>
-            <a href="/sunday-messages" class="@(IsActive("/sunday-messages") ? "active" : "")">主日信息</a>
-            <a href="/gospel-meetings" class="@(IsActive("/gospel-meetings") ? "active" : "")">福音聚会</a>
-            <a href="/special-meetings" class="@(IsActive("/special-meetings") ? "active" : "")">特别聚会</a>
-            <a href="/contact" class="@(IsActive("/contact") ? "active" : "")">联系我们</a>
-            @if (isAuthenticated)
-            {
-                <a href="/mgmt/meetings" class="btn-admin-nav">管理后台 Admin</a>
-            }
+            <a href="/mgmt/meetings" class="@(IsActive("/mgmt/meetings") ? "active" : "")">聚会 Meetings</a>
+            <a href="/mgmt/bulletin" class="@(IsActive("/mgmt/bulletin") ? "active" : "")">主日单张 Bulletin</a>
+            <a href="/" class="btn-back-to-public">返回前台 Public Site</a>
         </nav>
         <div style="display: flex; align-items: center; gap: 1rem;">
             @if (isAuthenticated)
@@ -33,12 +27,6 @@
                         <span>Logout</span>
                     </a>
                 </div>
-            }
-            else
-            {
-                <a href="/.auth/login/aad?post_login_redirect_uri=/" class="btn btn-primary btn-md hidden-mobile">
-                    <span>Login</span>
-                </a>
             }
             <button class="mobile-menu-btn hidden-desktop" @onclick="ToggleMobileMenu">
                 <span class="material-symbols-outlined">@(isMobileMenuOpen ? "close" : "menu")</span>
@@ -51,15 +39,9 @@
     {
         <div class="mobile-menu hidden-desktop">
             <nav class="mobile-nav">
-                <a href="/" @onclick="CloseMobileMenu">Home</a>
-                <a href="/sunday-messages" @onclick="CloseMobileMenu">主日信息</a>
-                <a href="/gospel-meetings" @onclick="CloseMobileMenu">福音聚会</a>
-                <a href="/special-meetings" @onclick="CloseMobileMenu">特别聚会</a>
-                <a href="/contact" @onclick="CloseMobileMenu">联系我们</a>
-                @if (isAuthenticated)
-                {
-                    <a href="/mgmt/meetings" @onclick="CloseMobileMenu" class="mobile-admin-link">管理后台 Admin</a>
-                }
+                <a href="/mgmt/meetings" @onclick="CloseMobileMenu">聚会 Meetings</a>
+                <a href="/mgmt/bulletin" @onclick="CloseMobileMenu">主日单张 Bulletin</a>
+                <a href="/" @onclick="CloseMobileMenu" class="mobile-back-link">返回前台 Public Site</a>
             </nav>
             @if (isAuthenticated)
             {
@@ -68,12 +50,6 @@
                 </div>
                 <a href="/.auth/logout?post_logout_redirect_uri=/" class="btn btn-secondary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
                     <span>Logout</span>
-                </a>
-            }
-            else
-            {
-                <a href="/.auth/login/aad?post_login_redirect_uri=/" class="btn btn-primary btn-md mobile-login-btn" @onclick="CloseMobileMenu">
-                    <span>Login</span>
                 </a>
             }
         </div>
@@ -100,7 +76,6 @@
     {
         var uri = new Uri(Navigation.Uri);
         var path = uri.AbsolutePath;
-        if (href == "/") return path == "/";
         return path.StartsWith(href, StringComparison.OrdinalIgnoreCase);
     }
 
