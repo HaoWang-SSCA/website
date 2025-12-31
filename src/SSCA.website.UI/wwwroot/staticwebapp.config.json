@@ -15,7 +15,7 @@
         },
         {
             "route": "/bulletin/{name}",
-            "rewrite": "/api/bulletin-file/{name}"
+            "rewrite": "/api/bulletin/{name}"
         }
     ],
     "navigationFallback": {
