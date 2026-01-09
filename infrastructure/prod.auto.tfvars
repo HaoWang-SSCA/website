@@ -8,9 +8,9 @@ resource_group_name = "ssca-bc-website-rg"
 
 # PostgreSQL - Shared Server Configuration
 # Connection details for the shared PostgreSQL server
-postgres_host          = "your-shared-postgres-server.postgres.database.azure.com"
+postgres_host          = "shared-data.postgres.database.azure.com"
 postgres_port          = 5432
-postgres_database_name = "ssca"
+postgres_database_name = "wonner"
 
 # Storage
 storage_account_tier     = "Standard"
