@@ -23,20 +23,10 @@ output "static_web_app_api_key" {
   sensitive   = true
 }
 
-# PostgreSQL
-output "postgres_server_name" {
-  description = "The name of the PostgreSQL server"
-  value       = azurerm_postgresql_flexible_server.main.name
-}
-
-output "postgres_fqdn" {
-  description = "The FQDN of the PostgreSQL server"
-  value       = azurerm_postgresql_flexible_server.main.fqdn
-}
-
+# PostgreSQL (Shared Server)
 output "postgres_connection_string" {
   description = "PostgreSQL connection string for application"
-  value       = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=ssca;Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
+  value       = "Host=${var.postgres_host};Port=${var.postgres_port};Database=${var.postgres_database_name};Username=${var.postgres_username};Password=${var.postgres_password};SSL Mode=Require"
   sensitive   = true
 }
 

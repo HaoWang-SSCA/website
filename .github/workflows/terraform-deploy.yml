@@ -55,7 +55,8 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var="postgres_admin_password=${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
+            -var="postgres_username=${{ secrets.POSTGRES_USERNAME }}" \
+            -var="postgres_password=${{ secrets.POSTGRES_PASSWORD }}" \
             -var="aad_client_id=${{ secrets.AAD_CLIENT_ID }}" \
             -var="aad_client_secret=${{ secrets.AAD_CLIENT_SECRET }}" \
             -out=tfplan \

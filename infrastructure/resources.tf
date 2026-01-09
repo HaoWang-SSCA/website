@@ -24,7 +24,7 @@ resource "azurerm_static_web_app" "website" {
 
   app_settings = merge(
     {
-      "ConnectionStrings__PostgreSQL"         = "Host=${azurerm_postgresql_flexible_server.main.fqdn};Database=${azurerm_postgresql_flexible_server_database.ssca.name};Username=${var.postgres_admin_username};Password=${var.postgres_admin_password};SSL Mode=Require"
+      "ConnectionStrings__PostgreSQL"         = "Host=${var.postgres_host};Port=${var.postgres_port};Database=${var.postgres_database_name};Username=${var.postgres_username};Password=${var.postgres_password};SSL Mode=Require"
       "ConnectionStrings__AzureStorage"       = azurerm_storage_account.media.primary_connection_string
       "AzureStorage__BaseUrl"                 = trimsuffix(azurerm_storage_account.media.primary_blob_endpoint, "/")
       "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
@@ -39,41 +39,10 @@ resource "azurerm_static_web_app" "website" {
 }
 
 # ============================================
-# Azure PostgreSQL Flexible Server
+# PostgreSQL - Using Shared Server
 # ============================================
-resource "azurerm_postgresql_flexible_server" "main" {
-  name                   = "${var.project_name}-postgres-${random_string.suffix.result}"
-  resource_group_name    = azurerm_resource_group.main.name
-  location               = var.location
-  version                = var.postgres_version
-  administrator_login    = var.postgres_admin_username
-  administrator_password = var.postgres_admin_password
-  zone                   = "1"
-
-  storage_mb = var.postgres_storage_mb
-  sku_name   = var.postgres_sku
-
-  backup_retention_days        = 7
-  geo_redundant_backup_enabled = false
-
-  tags = var.tags
-}
-
-# Firewall rule to allow Azure services
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_postgresql_flexible_server.main.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
-
-# PostgreSQL Database
-resource "azurerm_postgresql_flexible_server_database" "ssca" {
-  name      = "ssca"
-  server_id = azurerm_postgresql_flexible_server.main.id
-  charset   = "UTF8"
-  collation = "en_US.utf8"
-}
+# Application connects directly to the shared PostgreSQL server
+# Database must already exist on the shared server
 
 # ============================================
 # Azure Storage Account (for media files)

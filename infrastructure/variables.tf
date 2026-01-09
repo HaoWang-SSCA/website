@@ -24,33 +24,32 @@ variable "resource_group_name" {
   default     = "ssca-bc-rg"
 }
 
-# PostgreSQL Configuration
-variable "postgres_sku" {
-  description = "PostgreSQL SKU name"
+# PostgreSQL Configuration - Shared Server
+variable "postgres_host" {
+  description = "Hostname of the shared PostgreSQL server"
   type        = string
-  default     = "B_Standard_B1ms" # Burstable, cost-effective for small workloads
 }
 
-variable "postgres_storage_mb" {
-  description = "PostgreSQL storage size in MB"
+variable "postgres_port" {
+  description = "Port of the PostgreSQL server"
   type        = number
-  default     = 32768 # 32 GB
+  default     = 5432
 }
 
-variable "postgres_version" {
-  description = "PostgreSQL version"
+variable "postgres_database_name" {
+  description = "Name of the database to create on the shared server"
   type        = string
-  default     = "16"
+  default     = "ssca"
 }
 
-variable "postgres_admin_username" {
-  description = "PostgreSQL administrator username"
+variable "postgres_username" {
+  description = "PostgreSQL username for the shared server"
   type        = string
-  default     = "sscaadmin"
+  sensitive   = true
 }
 
-variable "postgres_admin_password" {
-  description = "PostgreSQL administrator password"
+variable "postgres_password" {
+  description = "PostgreSQL password for the shared server"
   type        = string
   sensitive   = true
 }

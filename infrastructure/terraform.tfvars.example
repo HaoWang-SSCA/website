@@ -6,12 +6,15 @@ environment         = "prod"
 location            = "centralus"  # Supported: westus2, centralus, eastus2, westeurope, eastasia
 resource_group_name = "ssca-bc-website-rg"
 
-# PostgreSQL
-postgres_sku            = "B_Standard_B1ms"  # Burstable tier, cost-effective
-postgres_storage_mb     = 32768              # 32 GB
-postgres_version        = "16"
-postgres_admin_username = "sscaadmin"
-# postgres_admin_password = "YOUR_SECURE_PASSWORD"  # Set via environment variable TF_VAR_postgres_admin_password
+# PostgreSQL - Shared Server Configuration
+# Connection details for the shared PostgreSQL server
+# Database must already exist on the shared server
+
+postgres_host          = "your-shared-postgres-server.postgres.database.azure.com"
+postgres_port          = 5432
+postgres_database_name = "ssca"
+# postgres_username = "your_username"  # Set via environment variable TF_VAR_postgres_username
+# postgres_password = "your_password"  # Set via environment variable TF_VAR_postgres_password
 
 # Storage
 storage_account_tier     = "Standard"

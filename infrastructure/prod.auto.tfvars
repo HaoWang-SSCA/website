@@ -6,11 +6,11 @@ environment         = "prod"
 location            = "centralus"
 resource_group_name = "ssca-bc-website-rg"
 
-# PostgreSQL
-postgres_sku            = "B_Standard_B1ms"
-postgres_storage_mb     = 32768
-postgres_version        = "16"
-postgres_admin_username = "sscaadmin"
+# PostgreSQL - Shared Server Configuration
+# Connection details for the shared PostgreSQL server
+postgres_host          = "your-shared-postgres-server.postgres.database.azure.com"
+postgres_port          = 5432
+postgres_database_name = "ssca"
 
 # Storage
 storage_account_tier     = "Standard"
