@@ -21,34 +21,67 @@ A C# console application for migrating data from the legacy PHP website (MySQL +
 
 ## Configuration
 
-Edit `appsettings.json` before running:
+This tool uses a two-file configuration approach to keep secrets out of git:
+
+- `appsettings.json` - Template with placeholders (committed to git)
+- `appsettings.local.json` - Your actual secrets (gitignored, never committed)
+
+### Step 1: GoDaddy MySQL Setup (Source Database)
+
+Before connecting to GoDaddy MySQL remotely:
+
+1. **Enable Remote MySQL in cPanel:**
+   - Log in to GoDaddy → **Web Hosting** → **Manage**
+   - Click **cPanel Admin**
+   - Go to **Databases** → **Remote MySQL**
+   - Add your computer's public IP (find it at https://whatismyip.com)
+   - Click **Add Host**
+
+2. **Find your MySQL hostname:**
+   - In cPanel → **MySQL Databases**
+   - Look for the **hostname** under your database (e.g., `pXXXXXX.phpmyadmin.secureserver.net`)
+
+3. **Note your credentials:**
+   - Database name: `sscadb20140309`
+   - Username: (shown in MySQL Databases section)
+   - Password: (the password you set when creating the database)
+
+### Step 2: Create Your Local Secrets File
+
+Create `appsettings.local.json` in the same folder (this file is gitignored):
 
 ```json
 {
   "SourceDatabase": {
-    "ConnectionString": "Server=YOUR_MYSQL_HOST;Port=3306;Database=sscadb20140309;User=YOUR_USER;Password=YOUR_PASSWORD;CharSet=utf8;"
+    "ConnectionString": "Server=YOUR_GODADDY_HOSTNAME;Port=3306;Database=sscadb20140309;User=YOUR_USER;Password=YOUR_PASSWORD;CharSet=utf8;"
   },
   "TargetDatabase": {
-    "ConnectionString": "Host=YOUR_PG_HOST;Port=5432;Database=ssca_website;Username=YOUR_USER;Password=YOUR_PASSWORD;"
-  },
-  "SourceWebsite": {
-    "Domain": "https://www.ssca-bc.org",
-    "SundayMessageAudioPath": "/messages/sundaymsg",
-    "SpecialMessageAudioPath": "/messages/specialmsg"
+    "ConnectionString": "Host=YOUR_AZURE_PG_HOST;Port=5432;Database=YOUR_DB;Username=YOUR_USER;Password=YOUR_PASSWORD;SSL Mode=Require"
   },
   "TargetStorage": {
-    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=YOUR_ACCOUNT;AccountKey=YOUR_KEY;EndpointSuffix=core.windows.net",
-    "ContainerName": "audio-files"
-  },
-  "Migration": {
-    "ProgressFile": "migration_progress.json",
-    "BatchSize": 10,
-    "RetryCount": 3,
-    "RetryDelaySeconds": 5,
-    "DryRun": false
+    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=YOUR_ACCOUNT;AccountKey=YOUR_KEY;EndpointSuffix=core.windows.net"
   }
 }
 ```
+
+**Example with GoDaddy:**
+```json
+{
+  "SourceDatabase": {
+    "ConnectionString": "Server=p3plcpnl0000.phpmyadmin.secureserver.net;Port=3306;Database=sscadb20140309;User=sscadbuser0801;Password=YourActualPassword;CharSet=utf8;"
+  }
+}
+```
+
+### Step 3: Verify Configuration
+
+The template `appsettings.json` contains placeholder values. Your `appsettings.local.json` overrides these with real credentials.
+
+| File | Contains | Git Status |
+|------|----------|------------|
+| `appsettings.json` | Placeholders & non-sensitive settings | ✅ Committed |
+| `appsettings.local.json` | Real passwords & connection strings | 🚫 Gitignored |
+
 
 ## Usage
 
