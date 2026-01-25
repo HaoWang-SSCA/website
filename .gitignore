@@ -113,3 +113,12 @@ node_modules/
 # Backup files
 *.bak
 *.backup
+
+# Local secrets and sensitive configuration
+**/appsettings.local.json
+**/appsettings.*.local.json
+**/local.settings.json
+
+# Migration tool runtime files
+**/migration_progress.json
+**/tools/SSCA.DataMigration/logs/
