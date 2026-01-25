@@ -56,6 +56,14 @@ public class MeetingsFunction
         return new OkObjectResult(result);
     }
 
+    [Function("GetSpeakers")]
+    public async Task<IActionResult> GetSpeakers(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/speakers")] HttpRequest req)
+    {
+        var speakers = await _meetingService.GetDistinctSpeakersAsync();
+        return new OkObjectResult(speakers);
+    }
+
     private static MeetingSearchQuery ParseQuery(HttpRequest req)
     {
         var query = new MeetingSearchQuery();

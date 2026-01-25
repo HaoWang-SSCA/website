@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using SSCA.website.API.Data;
 using SSCA.website.API.Models;
@@ -17,16 +18,21 @@ public interface IMeetingService
     Task<MessageMeetingDto?> UpdateAsync(UpdateMeetingRequest request);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> UpdateAudioBlobAsync(Guid id, string blobName);
+    Task<List<string>> GetDistinctSpeakersAsync();
 }
 
 public class MeetingService : IMeetingService
 {
     private readonly AppDbContext _context;
+    private readonly IMemoryCache _cache;
     private readonly string _storageBaseUrl;
+    private const string SpeakersCacheKey = "DistinctSpeakers";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
-    public MeetingService(AppDbContext context, IConfiguration configuration)
+    public MeetingService(AppDbContext context, IConfiguration configuration, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
         _storageBaseUrl = configuration["AzureStorage:BaseUrl"] ?? "";
     }
 
@@ -79,6 +85,7 @@ public class MeetingService : IMeetingService
 
         _context.MessageMeetings.Add(meeting);
         await _context.SaveChangesAsync();
+        InvalidateSpeakersCache();
         return ToDto(meeting);
     }
 
@@ -98,6 +105,7 @@ public class MeetingService : IMeetingService
         meeting.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        InvalidateSpeakersCache();
         return ToDto(meeting);
     }
 
@@ -108,6 +116,7 @@ public class MeetingService : IMeetingService
 
         _context.MessageMeetings.Remove(meeting);
         await _context.SaveChangesAsync();
+        InvalidateSpeakersCache();
         return true;
     }
 
@@ -120,6 +129,28 @@ public class MeetingService : IMeetingService
         meeting.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<string>> GetDistinctSpeakersAsync()
+    {
+        if (_cache.TryGetValue(SpeakersCacheKey, out List<string>? cachedSpeakers) && cachedSpeakers != null)
+        {
+            return cachedSpeakers;
+        }
+
+        var speakers = await _context.MessageMeetings
+            .Select(m => m.Speaker)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToListAsync();
+
+        _cache.Set(SpeakersCacheKey, speakers, CacheDuration);
+        return speakers;
+    }
+
+    private void InvalidateSpeakersCache()
+    {
+        _cache.Remove(SpeakersCacheKey);
     }
 
     private async Task<PagedResult<MessageMeetingDto>> GetPagedResultAsync(

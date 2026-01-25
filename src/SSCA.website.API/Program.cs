@@ -24,6 +24,9 @@ var host = new HostBuilder()
             options.UseNpgsql(configuration.GetConnectionString("PostgreSQL"));
         });
 
+        // Add caching
+        services.AddMemoryCache();
+
         // Add MeetingService
         services.AddScoped<IMeetingService, MeetingService>();
 

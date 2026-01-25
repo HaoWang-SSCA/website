@@ -1,7 +1,9 @@
 @page "/special-meetings"
 @using SSCA.website.Shared.Models
+@using SSCA.website.UI.Services
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject SpeakerService SpeakerService
 
 <div class="meetings-page special-page">
     <div class="container">
@@ -14,7 +16,13 @@
                 <div class="search-row">
                     <div class="form-group">
                         <label for="speaker">讲员 Speaker</label>
-                        <input type="text" id="speaker" @bind="searchSpeaker" @bind:event="oninput" placeholder="Search by speaker..." />
+                        <select id="speaker" @bind="searchSpeaker">
+                            <option value="">-- 全部讲员 All Speakers --</option>
+                            @foreach (var speaker in speakers)
+                            {
+                                <option value="@speaker">@speaker</option>
+                            }
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="topic">主题 Topic</label>
@@ -125,6 +133,7 @@
     private bool isLoading = true;
     private int currentPage = 1;
     private string? searchSpeaker;
+    private List<string> speakers = new();
     private string? searchTopic;
     private DateTime? dateFrom;
     private DateTime? dateTo;
@@ -183,7 +192,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSpeakers();
         await LoadMeetings();
+    }
+
+    private async Task LoadSpeakers()
+    {
+        speakers = await SpeakerService.GetSpeakersAsync();
     }
 
     private async Task LoadMeetings()
