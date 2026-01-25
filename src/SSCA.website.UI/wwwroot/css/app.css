@@ -1323,6 +1323,29 @@ h3 {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+/* Mobile: Stack date on top of content */
+@media (max-width: 767px) {
+    .meeting-card {
+        flex-direction: column;
+    }
+
+    .meeting-date {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        min-width: auto;
+    }
+
+    .meeting-date .day {
+        font-size: 1.5rem;
+    }
+
+    .meeting-date .month {
+        font-size: 0.875rem;
+        margin-top: 0;
+    }
+}
+
 .meeting-badge {
     position: absolute;
     top: 0.75rem;
