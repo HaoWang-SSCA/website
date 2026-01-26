@@ -68,8 +68,8 @@
                                 }
                             </div>
                             <div class="link-expiry">
-                                <span class="material-symbols-outlined">schedule</span>
-                                <span>过期: @link.ExpiryDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                                <span class="material-symbols-outlined">@(IsNeverExpires(link.ExpiryDate) ? "all_inclusive" : "schedule")</span>
+                                <span>@(IsNeverExpires(link.ExpiryDate) ? "永不过期 Never Expires" : $"过期: {link.ExpiryDate.ToLocalTime():yyyy-MM-dd HH:mm}")</span>
                             </div>
                         </div>
                         <div class="link-actions">
@@ -148,15 +148,24 @@
                     </div>
                 }
 
-                <div class="form-row">
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" @bind="neverExpires" />
+                        <span>永不过期 Never Expires</span>
+                    </label>
+                </div>
+
+                @if (!neverExpires)
+                {
                     <div class="form-group">
                         <label>过期日期 Expiry Date *</label>
                         <input type="datetime-local" class="form-control" @bind="expiryDateLocal" />
                     </div>
-                    <div class="form-group">
-                        <label>显示顺序 Display Order</label>
-                        <input type="number" class="form-control" @bind="formModel.DisplayOrder" min="0" />
-                    </div>
+                }
+
+                <div class="form-group">
+                    <label>显示顺序 Display Order</label>
+                    <input type="number" class="form-control" @bind="formModel.DisplayOrder" min="0" />
                 </div>
 
                 @if (!string.IsNullOrEmpty(errorMessage))
@@ -445,6 +454,20 @@
         cursor: pointer;
     }
 
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        accent-color: var(--primary);
+    }
+
     .upload-zone {
         position: relative;
         margin-top: 0.5rem;
@@ -554,6 +577,12 @@
     private HeroLinkDto? deletingLink;
     private IBrowserFile? selectedFile;
     private DateTime expiryDateLocal;
+    private bool neverExpires = false;
+
+    // Date far in future to represent "never expires"
+    private static readonly DateTime NeverExpiresDate = new DateTime(9999, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
+    private static bool IsNeverExpires(DateTime date) => date.Year >= 9999;
 
     private class FormModel
     {
@@ -592,6 +621,7 @@
         editingLink = null;
         formModel = new FormModel();
         linkType = "external";
+        neverExpires = false;
         expiryDateLocal = DateTime.Now.AddMonths(1);
         selectedFile = null;
         errorMessage = null;
@@ -609,7 +639,8 @@
             DisplayOrder = link.DisplayOrder
         };
         linkType = string.IsNullOrEmpty(link.ExternalUrl) ? "file" : "external";
-        expiryDateLocal = link.ExpiryDate.ToLocalTime();
+        neverExpires = IsNeverExpires(link.ExpiryDate);
+        expiryDateLocal = neverExpires ? DateTime.Now.AddMonths(1) : link.ExpiryDate.ToLocalTime();
         selectedFile = null;
         errorMessage = null;
         showDialog = true;
@@ -711,7 +742,7 @@
                     Text = formModel.Text,
                     ExternalUrl = formModel.ExternalUrl,
                     FileBlobName = formModel.FileBlobName,
-                    ExpiryDate = expiryDateLocal.ToUniversalTime(),
+                    ExpiryDate = neverExpires ? NeverExpiresDate : expiryDateLocal.ToUniversalTime(),
                     DisplayOrder = formModel.DisplayOrder
                 };
                 response = await Http.PostAsJsonAsync("api/mgmt/hero-links", request);
@@ -725,7 +756,7 @@
                     Text = formModel.Text,
                     ExternalUrl = formModel.ExternalUrl,
                     FileBlobName = formModel.FileBlobName,
-                    ExpiryDate = expiryDateLocal.ToUniversalTime(),
+                    ExpiryDate = neverExpires ? NeverExpiresDate : expiryDateLocal.ToUniversalTime(),
                     DisplayOrder = formModel.DisplayOrder
                 };
                 response = await Http.PutAsJsonAsync($"api/mgmt/hero-links/{editingLink.Id}", request);

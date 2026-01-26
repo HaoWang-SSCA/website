@@ -14,7 +14,7 @@ This feature adds the ability to display dynamic, manageable links on the hero s
 - Two link types supported:
   - **External URL** - Links to external websites (e.g., registration forms, event pages)
   - **File Upload** - Upload PDF, images, or documents that users can download
-- Set expiry dates - links automatically hide when expired
+- Set expiry dates or choose **"Never Expires"** - links hide automatically when expired or stay visible indefinitely
 - Control display order - determine which links appear first
 - View all links including expired ones for reference
 
