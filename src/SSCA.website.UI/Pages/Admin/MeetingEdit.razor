@@ -2,8 +2,10 @@
 @page "/mgmt/meetings/{Id:guid}"
 @using SSCA.website.Shared.Models
 @using System.ComponentModel.DataAnnotations
+@using SSCA.website.UI.Services
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject SpeakerService SpeakerService
 
 <div class="admin-page">
     <div class="container">
@@ -29,43 +31,49 @@
         {
             <div class="form-card">
                 <EditForm Model="@model" OnValidSubmit="SaveMeeting">
-                    <DataAnnotationsValidator />
-                    
+                    <DataAnnotationsValidator/>
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="date">信息日期 Date *</label>
-                            <InputDate id="date" @bind-Value="model.Date" class="form-control" />
-                            <ValidationMessage For="@(() => model.Date)" />
+                            <InputDate id="date" @bind-Value="model.Date" class="form-control"/>
+                            <ValidationMessage For="@(() => model.Date)"/>
                         </div>
 
                         <div class="form-group">
                             <label for="speaker">讲员 Speaker *</label>
-                            <InputText id="speaker" @bind-Value="model.Speaker" class="form-control" placeholder="Enter speaker name" />
-                            <ValidationMessage For="@(() => model.Speaker)" />
+                            <InputText id="speaker" @bind-Value="model.Speaker" class="form-control" placeholder="Enter speaker name" list="speakersList"/>
+                            <datalist id="speakersList">
+                                @foreach (var speaker in allSpeakers)
+                                {
+                                    <option value="@speaker">@speaker</option>
+                                }
+                            </datalist>
+                            <ValidationMessage For="@(() => model.Speaker)"/>
                         </div>
 
                         <div class="form-group full-width">
                             <label for="topic">信息主题 Topic *</label>
-                            <InputText id="topic" @bind-Value="model.Topic" class="form-control" placeholder="Enter message topic" />
-                            <ValidationMessage For="@(() => model.Topic)" />
+                            <InputText id="topic" @bind-Value="model.Topic" class="form-control" placeholder="Enter message topic"/>
+                            <ValidationMessage For="@(() => model.Topic)"/>
                         </div>
 
                         <div class="form-group full-width">
                             <label for="videoUrl">视频链接 Video URL</label>
-                            <InputText id="videoUrl" @bind-Value="model.VideoUrl" class="form-control" placeholder="https://youtube.com/..." />
-                            <ValidationMessage For="@(() => model.VideoUrl)" />
+                            <InputText id="videoUrl" @bind-Value="model.VideoUrl" class="form-control" placeholder="https://youtube.com/..."/>
+                            <ValidationMessage For="@(() => model.VideoUrl)"/>
                         </div>
 
                         <div class="form-group">
                             <label class="checkbox-label">
-                                <InputCheckbox @bind-Value="model.IsGospel" />
+                                <InputCheckbox @bind-Value="model.IsGospel"/>
                                 <span>福音信息 Gospel Message</span>
                             </label>
                         </div>
 
                         <div class="form-group">
                             <label class="checkbox-label">
-                                <InputCheckbox @bind-Value="model.IsSpecialMeeting" />
+                                <InputCheckbox @bind-Value="model.IsSpecialMeeting"/>
                                 <span>特别聚会 Special Meeting</span>
                             </label>
                         </div>
@@ -92,7 +100,7 @@
                         }
                         <div class="form-group">
                             <label for="audioFile">上传音频 Upload Audio @(IsNew ? "" : "(Optional)")</label>
-                            <InputFile id="audioFile" OnChange="HandleAudioUpload" accept=".mp3,.wav,.m4a,.ogg" />
+                            <InputFile id="audioFile" OnChange="HandleAudioUpload" accept=".mp3,.wav,.m4a,.ogg"/>
                             @if (isUploading)
                             {
                                 <div class="upload-progress">
@@ -138,8 +146,7 @@
 </div>
 
 @code {
-    [Parameter]
-    public Guid? Id { get; set; }
+    [Parameter] public Guid? Id { get; set; }
 
     private bool IsNew => !Id.HasValue;
     private MeetingFormModel model = new();
@@ -150,16 +157,31 @@
     private string? errorMessage;
     private string? uploadMessage;
     private bool uploadSuccess;
+    private List<string> allSpeakers = new();
 
     protected override async Task OnInitializedAsync()
     {
-        if (!IsNew)
+        try
         {
-            await LoadMeeting();
+            isLoading = true;
+            // Load all current speakers for the datalist
+            allSpeakers = await SpeakerService.GetSpeakersAsync();
+
+            if (!IsNew)
+            {
+                await LoadMeeting();
+            }
+            else
+            {
+                model.Date = DateTime.Today;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            model.Date = DateTime.Today;
+            errorMessage = $"Initialization error: {ex.Message}";
+        }
+        finally
+        {
             isLoading = false;
         }
     }
@@ -185,10 +207,6 @@
         catch (Exception ex)
         {
             errorMessage = $"Failed to load meeting: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
         }
     }
 
@@ -233,6 +251,8 @@
 
             if (response.IsSuccessStatusCode)
             {
+                // Invalidate the speaker cache so that the new speaker appears in the list
+                SpeakerService.InvalidateCache();
                 Navigation.NavigateTo("/mgmt/meetings");
             }
             else
@@ -306,12 +326,12 @@
         public DateTime Date { get; set; } = DateTime.Today;
         public string Speaker { get; set; } = string.Empty;
         public string Topic { get; set; } = string.Empty;
-        [Url]
-        public string? VideoUrl { get; set; }
+        [Url] public string? VideoUrl { get; set; }
         public bool IsGospel { get; set; }
         public bool IsSpecialMeeting { get; set; }
         public string? AudioBlobName { get; set; }
     }
 
     private record AudioUploadResult(string BlobName, string Url);
+
 }
