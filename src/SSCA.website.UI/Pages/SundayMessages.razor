@@ -221,7 +221,7 @@
 
     private string BuildQueryString()
     {
-        var queryParams = new List<string> { $"page={currentPage}", "pageSize=10" };
+        var queryParams = new List<string> { $"page={currentPage}", "pageSize=12" };
         if (!string.IsNullOrWhiteSpace(searchSpeaker))
             queryParams.Add($"speaker={Uri.EscapeDataString(searchSpeaker)}");
         if (!string.IsNullOrWhiteSpace(searchTopic))
