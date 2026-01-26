@@ -120,11 +120,15 @@
                 if (authData?.ClientPrincipal != null)
                 {
                     isAuthenticated = true;
-                    // Prefer a display name from claims when available
+                    // Priority list for finding a display name
                     var claims = authData.ClientPrincipal.Claims ?? Array.Empty<Claim>();
-                    string? nameClaim = claims.FirstOrDefault(c => string.Equals(c.Type, "name", StringComparison.OrdinalIgnoreCase))?.Value
-                                         ?? claims.FirstOrDefault(c => string.Equals(c.Type, "given_name", StringComparison.OrdinalIgnoreCase))?.Value
-                                         ?? claims.FirstOrDefault(c => string.Equals(c.Type, "preferred_username", StringComparison.OrdinalIgnoreCase))?.Value;
+                    
+                    // Priority list for finding a display name
+                    string? nameClaim = 
+                        claims.FirstOrDefault(c => string.Equals(c.typ, "name", StringComparison.OrdinalIgnoreCase))?.val ??
+                        claims.FirstOrDefault(c => string.Equals(c.typ, "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name", StringComparison.OrdinalIgnoreCase))?.val ??
+                        claims.FirstOrDefault(c => string.Equals(c.typ, "given_name", StringComparison.OrdinalIgnoreCase))?.val ??
+                        claims.FirstOrDefault(c => string.Equals(c.typ, "preferred_username", StringComparison.OrdinalIgnoreCase))?.val;
 
                     userName = nameClaim ?? authData.ClientPrincipal.UserDetails ?? "User";
                 }
@@ -141,5 +145,5 @@
 
     private class AuthData { public ClientPrincipal? ClientPrincipal { get; set; } }
     private class ClientPrincipal { public string? UserDetails { get; set; } public Claim[]? Claims { get; set; } }
-    private class Claim { public string? Type { get; set; } public string? Value { get; set; } }
+    private class Claim { public string? typ { get; set; } public string? val { get; set; } }
 }
