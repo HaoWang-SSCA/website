@@ -36,6 +36,9 @@ var host = new HostBuilder()
         // Add FileStorageService
         services.AddScoped<IFileStorageService, FileStorageService>();
 
+        // Add HeroLinkService
+        services.AddScoped<IHeroLinkService, HeroLinkService>();
+
         // Add Azure Blob Storage
         services.AddSingleton(sp =>
         {

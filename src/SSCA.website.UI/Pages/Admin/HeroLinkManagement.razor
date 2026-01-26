@@ -1,0 +1,780 @@
+@page "/mgmt/hero-links"
+@using SSCA.website.Shared.Models
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="admin-page">
+    <div class="container">
+        <div class="admin-header">
+            <div>
+                <h1 class="page-title">管理首页链接</h1>
+                <p class="page-subtitle">Manage Hero Links</p>
+            </div>
+            <div class="header-actions">
+                <a href="/mgmt/meetings" class="btn btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    返回 Back
+                </a>
+                <button class="btn btn-primary" @onclick="ShowAddDialog">
+                    <span class="material-symbols-outlined">add</span>
+                    添加链接 Add Link
+                </button>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        }
+        else if (links == null || links.Count == 0)
+        {
+            <div class="empty-state">
+                <span class="material-symbols-outlined">link_off</span>
+                <h3>暂无链接</h3>
+                <p>点击上方"添加链接"按钮创建首个链接</p>
+            </div>
+        }
+        else
+        {
+            <div class="links-grid">
+                @foreach (var link in links)
+                {
+                    <div class="link-card @(link.IsActive ? "" : "expired")">
+                        <div class="link-header">
+                            <div class="link-order">
+                                <span class="material-symbols-outlined">drag_indicator</span>
+                                <span>@link.DisplayOrder</span>
+                            </div>
+                            <div class="link-status @(link.IsActive ? "active" : "")">
+                                @(link.IsActive ? "有效 Active" : "已过期 Expired")
+                            </div>
+                        </div>
+                        <div class="link-body">
+                            <h3 class="link-text">@link.Text</h3>
+                            <div class="link-type">
+                                @if (!string.IsNullOrEmpty(link.ExternalUrl))
+                                {
+                                    <span class="material-symbols-outlined">link</span>
+                                    <span class="link-url" title="@link.ExternalUrl">外部链接</span>
+                                }
+                                else if (!string.IsNullOrEmpty(link.FileBlobName))
+                                {
+                                    <span class="material-symbols-outlined">attach_file</span>
+                                    <span>上传文件</span>
+                                }
+                            </div>
+                            <div class="link-expiry">
+                                <span class="material-symbols-outlined">schedule</span>
+                                <span>过期: @link.ExpiryDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                            </div>
+                        </div>
+                        <div class="link-actions">
+                            <button class="btn btn-sm btn-outline" @onclick="() => ShowEditDialog(link)">
+                                <span class="material-symbols-outlined">edit</span>
+                                编辑
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(link)">
+                                <span class="material-symbols-outlined">delete</span>
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@* Add/Edit Dialog *@
+@if (showDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(editingLink == null ? "添加链接 Add Link" : "编辑链接 Edit Link")</h2>
+                <button class="btn-close" @onclick="CloseDialog">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>链接文字 Link Text *</label>
+                    <input type="text" class="form-control" @bind="formModel.Text" placeholder="例如: 2025福音大会报名" />
+                </div>
+
+                <div class="form-group">
+                    <label>链接类型 Link Type</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="linkType" value="external" checked="@(linkType == "external")" @onchange="@(() => linkType = "external")" />
+                            <span>外部链接 External URL</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="linkType" value="file" checked="@(linkType == "file")" @onchange="@(() => linkType = "file")" />
+                            <span>上传文件 Upload File</span>
+                        </label>
+                    </div>
+                </div>
+
+                @if (linkType == "external")
+                {
+                    <div class="form-group">
+                        <label>外部链接地址 External URL *</label>
+                        <input type="url" class="form-control" @bind="formModel.ExternalUrl" placeholder="https://example.com" />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label>上传文件 Upload File</label>
+                        <div class="upload-zone">
+                            <InputFile OnChange="HandleFileSelected" class="file-input" id="hero-link-file" />
+                            <label for="hero-link-file" class="upload-label">
+                                <span class="material-symbols-outlined">cloud_upload</span>
+                                <span>@(selectedFile?.Name ?? formModel.FileBlobName ?? "点击或拖拽上传文件")</span>
+                            </label>
+                        </div>
+                        @if (isUploading)
+                        {
+                            <div class="upload-progress">
+                                <div class="spinner-small"></div>
+                                <span>上传中...</span>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>过期日期 Expiry Date *</label>
+                        <input type="datetime-local" class="form-control" @bind="expiryDateLocal" />
+                    </div>
+                    <div class="form-group">
+                        <label>显示顺序 Display Order</label>
+                        <input type="number" class="form-control" @bind="formModel.DisplayOrder" min="0" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-error">
+                        <span class="material-symbols-outlined">error</span>
+                        <span>@errorMessage</span>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDialog" disabled="@isSaving">取消 Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveLink" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <div class="spinner-small"></div>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined">save</span>
+                    }
+                    <span>保存 Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* Delete Confirmation Dialog *@
+@if (showDeleteConfirm)
+{
+    <div class="modal-overlay" @onclick="() => showDeleteConfirm = false">
+        <div class="modal-content modal-sm" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>确认删除 Confirm Delete</h2>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除链接 "<strong>@deletingLink?.Text</strong>" 吗？此操作无法撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="() => showDeleteConfirm = false">取消 Cancel</button>
+                <button class="btn btn-danger" @onclick="DeleteLink">
+                    <span class="material-symbols-outlined">delete</span>
+                    确认删除 Delete
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem;
+        background: var(--card-bg);
+        border-radius: 1rem;
+        border: 2px dashed var(--slate-300);
+    }
+
+    .empty-state .material-symbols-outlined {
+        font-size: 4rem;
+        color: var(--slate-400);
+        margin-bottom: 1rem;
+    }
+
+    .links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .link-card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border: 1px solid var(--slate-200);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .link-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgb(0 0 0 / 0.15);
+    }
+
+    .link-card.expired {
+        opacity: 0.6;
+        border-color: var(--slate-300);
+    }
+
+    .link-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .link-order {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .link-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        background: var(--slate-200);
+        color: var(--text-secondary);
+    }
+
+    .link-status.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+    }
+
+    .link-body {
+        margin-bottom: 1rem;
+    }
+
+    .link-text {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .link-type, .link-expiry {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .link-type .material-symbols-outlined,
+    .link-expiry .material-symbols-outlined {
+        font-size: 1.125rem;
+    }
+
+    .link-url {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .link-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--slate-200);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-sm {
+        max-width: 400px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--slate-200);
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-secondary);
+        padding: 0.25rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .btn-close:hover {
+        background: var(--slate-100);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        border-top: 1px solid var(--slate-200);
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--slate-300);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(19, 127, 236, 0.15);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .upload-zone {
+        position: relative;
+        margin-top: 0.5rem;
+    }
+
+    .upload-zone .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        border: 2px dashed var(--slate-300);
+        border-radius: 0.75rem;
+        color: var(--text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .upload-zone:hover .upload-label {
+        border-color: var(--primary);
+        background: rgba(19, 127, 236, 0.05);
+        color: var(--primary);
+    }
+
+    .upload-label .material-symbols-outlined {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-progress {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        color: var(--primary);
+    }
+
+    .spinner-small {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--slate-200);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .alert-error {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @@media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .radio-group {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+    }
+</style>
+
+@code {
+    private List<HeroLinkDto>? links;
+    private bool isLoading = true;
+    private bool showDialog = false;
+    private bool showDeleteConfirm = false;
+    private bool isSaving = false;
+    private bool isUploading = false;
+    private string? errorMessage;
+    private string linkType = "external";
+    private HeroLinkDto? editingLink;
+    private HeroLinkDto? deletingLink;
+    private IBrowserFile? selectedFile;
+    private DateTime expiryDateLocal;
+
+    private class FormModel
+    {
+        public string Text { get; set; } = string.Empty;
+        public string? ExternalUrl { get; set; }
+        public string? FileBlobName { get; set; }
+        public int DisplayOrder { get; set; }
+    }
+
+    private FormModel formModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLinks();
+    }
+
+    private async Task LoadLinks()
+    {
+        isLoading = true;
+        try
+        {
+            links = await Http.GetFromJsonAsync<List<HeroLinkDto>>("api/mgmt/hero-links");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading links: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowAddDialog()
+    {
+        editingLink = null;
+        formModel = new FormModel();
+        linkType = "external";
+        expiryDateLocal = DateTime.Now.AddMonths(1);
+        selectedFile = null;
+        errorMessage = null;
+        showDialog = true;
+    }
+
+    private void ShowEditDialog(HeroLinkDto link)
+    {
+        editingLink = link;
+        formModel = new FormModel
+        {
+            Text = link.Text,
+            ExternalUrl = link.ExternalUrl,
+            FileBlobName = link.FileBlobName,
+            DisplayOrder = link.DisplayOrder
+        };
+        linkType = string.IsNullOrEmpty(link.ExternalUrl) ? "file" : "external";
+        expiryDateLocal = link.ExpiryDate.ToLocalTime();
+        selectedFile = null;
+        errorMessage = null;
+        showDialog = true;
+    }
+
+    private void CloseDialog()
+    {
+        showDialog = false;
+        editingLink = null;
+        errorMessage = null;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        if (selectedFile != null)
+        {
+            isUploading = true;
+            StateHasChanged();
+
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                var fileContent = new StreamContent(selectedFile.OpenReadStream(50 * 1024 * 1024)); // 50MB max
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
+                content.Add(fileContent, "file", selectedFile.Name);
+
+                var response = await Http.PostAsync("api/mgmt/hero-links/upload", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<UploadResult>();
+                    formModel.FileBlobName = result?.BlobName;
+                    formModel.ExternalUrl = null;
+                }
+                else
+                {
+                    errorMessage = "文件上传失败 File upload failed";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"上传错误 Upload error: {ex.Message}";
+            }
+            finally
+            {
+                isUploading = false;
+            }
+        }
+    }
+
+    private class UploadResult
+    {
+        public string? BlobName { get; set; }
+        public string? Url { get; set; }
+    }
+
+    private async Task SaveLink()
+    {
+        errorMessage = null;
+
+        // Validation
+        if (string.IsNullOrWhiteSpace(formModel.Text))
+        {
+            errorMessage = "请输入链接文字 Please enter link text";
+            return;
+        }
+
+        if (linkType == "external")
+        {
+            if (string.IsNullOrWhiteSpace(formModel.ExternalUrl))
+            {
+                errorMessage = "请输入外部链接地址 Please enter external URL";
+                return;
+            }
+            formModel.FileBlobName = null;
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(formModel.FileBlobName))
+            {
+                errorMessage = "请上传文件 Please upload a file";
+                return;
+            }
+            formModel.ExternalUrl = null;
+        }
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            HttpResponseMessage response;
+            
+            if (editingLink == null)
+            {
+                // Create new
+                var request = new CreateHeroLinkRequest
+                {
+                    Text = formModel.Text,
+                    ExternalUrl = formModel.ExternalUrl,
+                    FileBlobName = formModel.FileBlobName,
+                    ExpiryDate = expiryDateLocal.ToUniversalTime(),
+                    DisplayOrder = formModel.DisplayOrder
+                };
+                response = await Http.PostAsJsonAsync("api/mgmt/hero-links", request);
+            }
+            else
+            {
+                // Update existing
+                var request = new UpdateHeroLinkRequest
+                {
+                    Id = editingLink.Id,
+                    Text = formModel.Text,
+                    ExternalUrl = formModel.ExternalUrl,
+                    FileBlobName = formModel.FileBlobName,
+                    ExpiryDate = expiryDateLocal.ToUniversalTime(),
+                    DisplayOrder = formModel.DisplayOrder
+                };
+                response = await Http.PutAsJsonAsync($"api/mgmt/hero-links/{editingLink.Id}", request);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                CloseDialog();
+                await LoadLinks();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"保存失败 Save failed: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"错误 Error: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ConfirmDelete(HeroLinkDto link)
+    {
+        deletingLink = link;
+        showDeleteConfirm = true;
+    }
+
+    private async Task DeleteLink()
+    {
+        if (deletingLink == null) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/mgmt/hero-links/{deletingLink.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                showDeleteConfirm = false;
+                deletingLink = null;
+                await LoadLinks();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting link: {ex.Message}");
+        }
+    }
+}

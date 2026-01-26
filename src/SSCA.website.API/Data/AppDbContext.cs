@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<MessageMeeting> MessageMeetings { get; set; } = null!;
+    public DbSet<HeroLink> HeroLinks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,21 @@ public class AppDbContext : DbContext
             entity.Property(e => e.AudioBlobName)
                 .HasMaxLength(500);
             entity.Property(e => e.VideoUrl)
+                .HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<HeroLink>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ExpiryDate);
+            entity.HasIndex(e => e.DisplayOrder);
+
+            entity.Property(e => e.Text)
+                .IsRequired()
+                .HasMaxLength(200);
+            entity.Property(e => e.ExternalUrl)
+                .HasMaxLength(500);
+            entity.Property(e => e.FileBlobName)
                 .HasMaxLength(500);
         });
     }
