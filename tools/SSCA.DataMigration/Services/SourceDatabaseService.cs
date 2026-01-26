@@ -46,7 +46,7 @@ public class SourceDatabaseService : IDisposable
         await connection.OpenAsync();
 
         const string sql = @"
-            SELECT id, date, date_ts, speaker, theme, gospel, audio_file 
+            SELECT id, date, date_ts, speaker, theme, gospel, audio_file, youtube_link 
             FROM ssca_sunday_msg 
             ORDER BY id";
 
@@ -63,7 +63,8 @@ public class SourceDatabaseService : IDisposable
                 Speaker = reader.GetString("speaker"),
                 Theme = reader.GetString("theme"),
                 Gospel = reader.GetInt32("gospel"),
-                AudioFile = reader.GetString("audio_file")
+                AudioFile = reader.GetString("audio_file"),
+                YoutubeLink = reader.IsDBNull(reader.GetOrdinal("youtube_link")) ? null : reader.GetString("youtube_link")
             });
         }
 
@@ -82,7 +83,7 @@ public class SourceDatabaseService : IDisposable
         await connection.OpenAsync();
 
         const string sql = @"
-            SELECT id, date, date_ts, speaker, theme, gospel, audio_file 
+            SELECT id, date, date_ts, speaker, theme, gospel, audio_file, youtube_link 
             FROM ssca_special_msg 
             ORDER BY id";
 
@@ -99,7 +100,8 @@ public class SourceDatabaseService : IDisposable
                 Speaker = reader.GetString("speaker"),
                 Theme = reader.GetString("theme"),
                 Gospel = reader.GetInt32("gospel"),
-                AudioFile = reader.GetString("audio_file")
+                AudioFile = reader.GetString("audio_file"),
+                YoutubeLink = reader.IsDBNull(reader.GetOrdinal("youtube_link")) ? null : reader.GetString("youtube_link")
             });
         }
 

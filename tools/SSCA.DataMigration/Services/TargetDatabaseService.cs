@@ -65,6 +65,33 @@ public class TargetDatabaseService : IDisposable
     }
 
     /// <summary>
+    /// Check if a record exists by date and topic (ignoring speaker, for re-migration/normalization)
+    /// </summary>
+    public async Task<Guid?> FindExistingRecordByDateAndTopicAsync(DateTime date, string topic, 
+        bool isGospel, bool isSpecialMeeting)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        const string sql = @"
+            SELECT ""Id"" FROM ""MessageMeetings"" 
+            WHERE ""Date"" = @date 
+            AND ""Topic"" = @topic
+            AND ""IsGospel"" = @isGospel
+            AND ""IsSpecialMeeting"" = @isSpecialMeeting
+            LIMIT 1";
+
+        await using var cmd = new NpgsqlCommand(sql, connection);
+        cmd.Parameters.AddWithValue("date", date);
+        cmd.Parameters.AddWithValue("topic", topic);
+        cmd.Parameters.AddWithValue("isGospel", isGospel);
+        cmd.Parameters.AddWithValue("isSpecialMeeting", isSpecialMeeting);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? (Guid)result : null;
+    }
+
+    /// <summary>
     /// Insert a new message meeting record
     /// </summary>
     public async Task<Guid> InsertMessageMeetingAsync(TargetMessageMeeting meeting)
@@ -113,6 +140,48 @@ public class TargetDatabaseService : IDisposable
         await using var cmd = new NpgsqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("id", id);
         cmd.Parameters.AddWithValue("audioBlobName", audioBlobName);
+        cmd.Parameters.AddWithValue("updatedAt", DateTime.UtcNow);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Update the VideoUrl for an existing record
+    /// </summary>
+    public async Task UpdateVideoUrlAsync(Guid id, string? videoUrl)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        const string sql = @"
+            UPDATE ""MessageMeetings"" 
+            SET ""VideoUrl"" = @videoUrl, ""UpdatedAt"" = @updatedAt
+            WHERE ""Id"" = @id";
+
+        await using var cmd = new NpgsqlCommand(sql, connection);
+        cmd.Parameters.AddWithValue("id", id);
+        cmd.Parameters.AddWithValue("videoUrl", (object?)videoUrl ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("updatedAt", DateTime.UtcNow);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Update the Speaker for an existing record
+    /// </summary>
+    public async Task UpdateSpeakerAsync(Guid id, string speaker)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        const string sql = @"
+            UPDATE ""MessageMeetings"" 
+            SET ""Speaker"" = @speaker, ""UpdatedAt"" = @updatedAt
+            WHERE ""Id"" = @id";
+
+        await using var cmd = new NpgsqlCommand(sql, connection);
+        cmd.Parameters.AddWithValue("id", id);
+        cmd.Parameters.AddWithValue("speaker", speaker);
         cmd.Parameters.AddWithValue("updatedAt", DateTime.UtcNow);
 
         await cmd.ExecuteNonQueryAsync();

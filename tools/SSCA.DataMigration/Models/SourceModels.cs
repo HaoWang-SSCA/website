@@ -12,6 +12,7 @@ public class SourceSundayMessage
     public string Theme { get; set; } = string.Empty;     // 信息主题
     public int Gospel { get; set; }                        // 0 or 1, 福音信息 flag
     public string AudioFile { get; set; } = string.Empty; // Audio filename, e.g., "2018_07_29.mp3"
+    public string? YoutubeLink { get; set; }               // YouTube video URL
 }
 
 /// <summary>
@@ -26,4 +27,5 @@ public class SourceSpecialMessage
     public string Theme { get; set; } = string.Empty;     // 信息主题
     public int Gospel { get; set; }                        // 0 or 1
     public string AudioFile { get; set; } = string.Empty; // Audio filename
+    public string? YoutubeLink { get; set; }               // YouTube video URL
 }

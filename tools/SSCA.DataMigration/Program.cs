@@ -103,10 +103,14 @@ class Program
                 storageConnectionString,
                 containerName ?? "audio-files");
             var progressService = new ProgressService(progressFile);
+            
+            // Speaker normalization service (optional speaker_mappings.json file)
+            var speakerMappingsFile = Path.Combine(Directory.GetCurrentDirectory(), "speaker_mappings.json");
+            var speakerService = new SpeakerNormalizationService(speakerMappingsFile);
 
             // Create orchestrator and run migration
             var orchestrator = new MigrationOrchestrator(
-                sourceDb, targetDb, audioService, progressService, settings);
+                sourceDb, targetDb, audioService, progressService, speakerService, settings);
 
             var success = await orchestrator.RunMigrationAsync();
 

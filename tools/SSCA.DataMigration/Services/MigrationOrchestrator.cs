@@ -13,6 +13,7 @@ public class MigrationOrchestrator
     private readonly TargetDatabaseService _targetDb;
     private readonly AudioMigrationService _audioService;
     private readonly ProgressService _progressService;
+    private readonly SpeakerNormalizationService _speakerService;
     private readonly MigrationSettings _settings;
 
     public MigrationOrchestrator(
@@ -20,12 +21,14 @@ public class MigrationOrchestrator
         TargetDatabaseService targetDb,
         AudioMigrationService audioService,
         ProgressService progressService,
+        SpeakerNormalizationService speakerService,
         MigrationSettings settings)
     {
         _sourceDb = sourceDb;
         _targetDb = targetDb;
         _audioService = audioService;
         _progressService = progressService;
+        _speakerService = speakerService;
         _settings = settings;
     }
 
@@ -61,6 +64,12 @@ public class MigrationOrchestrator
 
             Log.Information("Found {Sunday} Sunday messages and {Special} Special messages",
                 sundayMessages.Count, specialMessages.Count);
+
+            // Step 2b: Analyze speakers (shows potential duplicates)
+            var allSpeakers = sundayMessages.Select(m => m.Speaker)
+                .Concat(specialMessages.Select(m => m.Speaker))
+                .ToList();
+            SpeakerNormalizationService.AnalyzeSpeakers(allSpeakers);
 
             // Step 3: Migrate Sunday messages
             Log.Information("Step 3: Migrating Sunday messages...");
@@ -128,7 +137,7 @@ public class MigrationOrchestrator
             try
             {
                 await MigrateSingleRecordAsync("sunday", source.Id, source.Date, source.DateTs,
-                    source.Speaker, source.Theme, source.Gospel == 1, false, source.AudioFile);
+                    source.Speaker, source.Theme, source.Gospel == 1, false, source.AudioFile, source.YoutubeLink);
             }
             catch (Exception ex)
             {
@@ -170,7 +179,7 @@ public class MigrationOrchestrator
             try
             {
                 await MigrateSingleRecordAsync("special", source.Id, source.Date, source.DateTs,
-                    source.Speaker, source.Theme, source.Gospel == 1, true, source.AudioFile);
+                    source.Speaker, source.Theme, source.Gospel == 1, true, source.AudioFile, source.YoutubeLink);
             }
             catch (Exception ex)
             {
@@ -198,10 +207,27 @@ public class MigrationOrchestrator
         string topic,
         bool isGospel,
         bool isSpecialMeeting,
-        string audioFile)
+        string audioFile,
+        string? youtubeLink)
     {
         // Parse date - try multiple formats
         var date = ParseDate(dateStr, dateTs);
+        
+        // Normalize speaker name
+        var normalizedSpeaker = _speakerService.Normalize(speaker);
+        if (normalizedSpeaker != speaker)
+        {
+            Log.Debug("Speaker normalized: '{Original}' -> '{Normalized}'", speaker, normalizedSpeaker);
+        }
+        speaker = normalizedSpeaker;
+        
+        // Convert YouTube URL to embed format
+        var embedUrl = YouTubeUrlConverter.ConvertToEmbedUrl(youtubeLink);
+        if (!string.IsNullOrEmpty(youtubeLink) && embedUrl != youtubeLink)
+        {
+            Log.Debug("YouTube URL converted: '{Original}' -> '{Embed}'", youtubeLink, embedUrl);
+        }
+        youtubeLink = embedUrl;
         
         // Prepare target blob name
         var blobName = !string.IsNullOrEmpty(audioFile) 
@@ -221,13 +247,31 @@ public class MigrationOrchestrator
             }
             else
             {
-                // Check if already exists in target
-                var existingId = await _targetDb.FindExistingRecordAsync(date, speaker, topic, isGospel, isSpecialMeeting);
+                // Check if already exists in target - first try date+topic+type (ignoring old speaker)
+                // This allows us to update the speaker name for existing records
+                var existingId = await _targetDb.FindExistingRecordByDateAndTopicAsync(date, topic, isGospel, isSpecialMeeting);
+                
+                if (!existingId.HasValue)
+                {
+                    // Fall back to exact match including speaker (for new migrations)
+                    existingId = await _targetDb.FindExistingRecordAsync(date, speaker, topic, isGospel, isSpecialMeeting);
+                }
                 
                 if (existingId.HasValue)
                 {
                     targetId = existingId.Value;
                     Log.Debug("Record already exists in target: {Id}", targetId);
+                    
+                    // Update Speaker (for normalization scenarios)
+                    await _targetDb.UpdateSpeakerAsync(targetId, speaker);
+                    Log.Information("Updated Speaker for existing record: {Id} -> '{Speaker}'", targetId, speaker);
+                    
+                    // Update VideoUrl if provided (for re-migration scenarios)
+                    if (!string.IsNullOrEmpty(youtubeLink))
+                    {
+                        await _targetDb.UpdateVideoUrlAsync(targetId, youtubeLink);
+                        Log.Information("Updated VideoUrl for existing record: {Id}", targetId);
+                    }
                 }
                 else
                 {
@@ -239,7 +283,7 @@ public class MigrationOrchestrator
                         Speaker = speaker,
                         Topic = topic,
                         AudioBlobName = blobName,
-                        VideoUrl = null,
+                        VideoUrl = youtubeLink,
                         IsGospel = isGospel,
                         IsSpecialMeeting = isSpecialMeeting,
                         CreatedAt = DateTime.UtcNow,
