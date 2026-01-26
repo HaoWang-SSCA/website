@@ -83,7 +83,13 @@ h3 {
 .container {
     max-width: 1152px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .container {
+        padding: 0 2rem;
+    }
 }
 
 .section {
@@ -960,12 +966,18 @@ h3 {
 }
 
 .footer-content {
-    padding: 2rem 0;
+    padding: 3rem 0;
+}
+
+@media (min-width: 768px) {
+    .footer-content {
+        padding: 4rem 0;
+    }
 }
 
 .footer-grid {
     display: grid;
-    gap: 2rem;
+    gap: 3rem;
     grid-template-columns: 1fr;
 }
 
@@ -978,7 +990,7 @@ h3 {
 .footer-brand {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .footer-logo {
@@ -1059,17 +1071,17 @@ h3 {
 .footer .contact-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .footer .material-symbols-outlined {
-    font-size: 1rem;
+    font-size: 1.25rem;
     margin-top: 0.125rem;
 }
 
 .footer-bottom {
-    margin-top: 2rem;
+    margin-top: 3rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
     text-align: center;
