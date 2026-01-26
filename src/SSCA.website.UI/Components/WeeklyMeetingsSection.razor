@@ -1,0 +1,377 @@
+@* Weekly Meetings Section *@
+
+<section class="section meetings-section" id="meetings">
+    <div class="container">
+        <div class="section-header">
+            <h2>本周聚会安排</h2>
+            <p class="subtitle">Meetings in this week</p>
+        </div>
+
+        <div class="meetings-grid">
+            @* Lord's Day *@
+            <div class="day-card sunday">
+                <div class="day-header">
+                    <div class="day-icon">
+                        <span class="material-symbols-outlined">church</span>
+                    </div>
+                    <div class="day-title">
+                        <h3>主日</h3>
+                        <span>Lord's Day</span>
+                    </div>
+                </div>
+                <div class="day-content">
+                    <div class="meeting-item">
+                        <div class="meeting-time-badge">
+                            <span class="material-symbols-outlined">schedule</span>
+                            2:30 PM - 3:05 PM
+                        </div>
+                        <div class="meeting-details">
+                            <div class="meeting-name">
+                                <strong>擘饼聚会</strong>
+                                <span>Breaking of Bread Meeting</span>
+                            </div>
+                            <div class="meeting-divider"></div>
+                            <div class="meeting-name">
+                                <strong>真理慕道班</strong>
+                                <span>Basic Truth Class</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="meeting-item">
+                        <div class="meeting-time-badge">
+                            <span class="material-symbols-outlined">schedule</span>
+                            3:15 PM - 4:30 PM
+                        </div>
+                        <div class="meeting-details">
+                            <div class="meeting-name">
+                                <strong>信息聚会（国语，英语）</strong>
+                                <span>Message Meeting (Mandarin, English)</span>
+                            </div>
+                            <div class="meeting-divider"></div>
+                            <div class="meeting-name">
+                                <strong>儿童主日学</strong>
+                                <span>Children Sunday School</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-badge">
+                            <span class="material-symbols-outlined">schedule</span>
+                            5:30 PM - 7:00 PM
+                        </div>
+                        <div class="meeting-details">
+                            <div class="meeting-name">
+                                <strong>丰盛团契</strong>
+                                <span>Abundant Life Fellowship</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Thursday *@
+            <div class="day-card">
+                <div class="day-header">
+                    <div class="day-icon icon-thursday">
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                    </div>
+                    <div class="day-title">
+                        <h3>周四</h3>
+                        <span>Thursday</span>
+                    </div>
+                </div>
+                <div class="day-content">
+                    <div class="meeting-item">
+                        <div class="meeting-time-badge">
+                            <span class="material-symbols-outlined">schedule</span>
+                            7:30 PM - 8:30 PM
+                        </div>
+                        <div class="meeting-details">
+                            <div class="meeting-name">
+                                <strong>祷告聚会</strong>
+                                <span>Prayer Meeting</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Friday *@
+            <div class="day-card">
+                <div class="day-header">
+                    <div class="day-icon icon-friday">
+                        <span class="material-symbols-outlined">groups</span>
+                    </div>
+                    <div class="day-title">
+                        <h3>周五</h3>
+                        <span>Friday</span>
+                    </div>
+                </div>
+                <div class="day-content">
+                    <div class="meeting-item">
+                        <div class="meeting-time-badge">
+                            <span class="material-symbols-outlined">schedule</span>
+                            7:30 PM - 9:00 PM
+                        </div>
+                        <div class="meeting-details friday-groups">
+                            <div class="group-item">
+                                <span class="group-tag">中文组</span>
+                                <div class="meeting-name">
+                                    <strong>《罗马书》第 9 章</strong>
+                                    <span>Romans Ch. 9</span>
+                                </div>
+                            </div>
+                            <div class="group-item">
+                                <span class="group-tag">福音组</span>
+                                <div class="meeting-name">
+                                    <strong>《约翰福音》第 7 章</strong>
+                                    <span>John Ch. 7</span>
+                                </div>
+                            </div>
+                            <div class="group-item">
+                                <span class="group-tag english">English</span>
+                                <div class="meeting-name">
+                                    <strong>Matthew Ch. 1</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .meetings-section {
+        background-color: var(--slate-50);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dark .meetings-section {
+        background-color: #0c1219;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .section-header h2 {
+        font-size: 2.5rem;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .section-header .subtitle {
+        font-size: 1.25rem;
+        color: var(--primary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .meetings-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    @@media (min-width: 1024px) {
+        .meetings-grid {
+            grid-template-columns: repeat(3, 1fr);
+            align-items: stretch;
+        }
+    }
+
+    .day-card {
+        background: white;
+        border-radius: 2rem;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dark .day-card {
+        background: var(--slate-800);
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .day-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary);
+    }
+
+    .day-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--slate-100);
+    }
+
+    .dark .day-header {
+        border-bottom-color: var(--slate-700);
+    }
+
+    .day-icon {
+        width: 4rem;
+        height: 4rem;
+        background: linear-gradient(135deg, var(--primary) 0%, #0d6efd 100%);
+        border-radius: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 20px rgba(19, 127, 236, 0.3);
+    }
+
+    .icon-thursday {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .icon-friday {
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .day-icon .material-symbols-outlined {
+        font-size: 2.25rem;
+    }
+
+    .day-title h3 {
+        font-size: 1.75rem;
+        margin: 0;
+        color: var(--text-color);
+        font-weight: 800;
+    }
+
+    .day-title span {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .day-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        flex: 1;
+    }
+
+    .meeting-item {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .meeting-time-badge {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--primary);
+        background: rgba(19, 127, 236, 0.08);
+        padding: 0.4rem 1rem;
+        border-radius: 100px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: fit-content;
+    }
+
+    .dark .meeting-time-badge {
+        background: rgba(19, 127, 236, 0.2);
+        color: #60a5fa;
+    }
+
+    .meeting-time-badge .material-symbols-outlined {
+        font-size: 1.1rem;
+    }
+
+    .meeting-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-left: 0.5rem;
+    }
+
+    .meeting-divider {
+        height: 1px;
+        background: var(--slate-100);
+        margin: 0.25rem 0;
+    }
+
+    .dark .meeting-divider {
+        background: var(--slate-700);
+    }
+
+    .meeting-name {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .meeting-name strong {
+        font-size: 1.15rem;
+        color: var(--text-color);
+        line-height: 1.3;
+    }
+
+    .meeting-name span {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        font-weight: 400;
+    }
+
+    /* Friday Specifics */
+    .friday-groups {
+        gap: 1.5rem;
+    }
+
+    .group-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--slate-50);
+        border-radius: 1rem;
+        border-left: 4px solid #10b981;
+    }
+
+    .dark .group-item {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .group-tag {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #10b981;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .group-tag.english {
+        color: var(--primary);
+    }
+
+    .group-item:has(.english) {
+        border-left-color: var(--primary);
+    }
+</style>
