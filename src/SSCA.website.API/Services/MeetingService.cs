@@ -18,7 +18,7 @@ public interface IMeetingService
     Task<MessageMeetingDto?> UpdateAsync(UpdateMeetingRequest request);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> UpdateAudioBlobAsync(Guid id, string blobName);
-    Task<List<string>> GetDistinctSpeakersAsync();
+    Task<List<string>> GetDistinctSpeakersAsync(string? type = null);
 }
 
 public class MeetingService : IMeetingService
@@ -131,26 +131,45 @@ public class MeetingService : IMeetingService
         return true;
     }
 
-    public async Task<List<string>> GetDistinctSpeakersAsync()
+    public async Task<List<string>> GetDistinctSpeakersAsync(string? type = null)
     {
-        if (_cache.TryGetValue(SpeakersCacheKey, out List<string>? cachedSpeakers) && cachedSpeakers != null)
+        type = type?.ToLowerInvariant();
+        string cacheKey = string.IsNullOrEmpty(type) ? SpeakersCacheKey : $"{SpeakersCacheKey}_{type}";
+
+        if (_cache.TryGetValue(cacheKey, out List<string>? cachedSpeakers) && cachedSpeakers != null)
         {
             return cachedSpeakers;
         }
 
-        var speakers = await _context.MessageMeetings
+        var query = _context.MessageMeetings.AsQueryable();
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            query = type.ToLower() switch
+            {
+                "sunday" => query.Where(m => !m.IsGospel && !m.IsSpecialMeeting),
+                "gospel" => query.Where(m => m.IsGospel),
+                "special" => query.Where(m => m.IsSpecialMeeting),
+                _ => query
+            };
+        }
+
+        var speakers = await query
             .Select(m => m.Speaker)
             .Distinct()
             .OrderBy(s => s)
             .ToListAsync();
 
-        _cache.Set(SpeakersCacheKey, speakers, CacheDuration);
+        _cache.Set(cacheKey, speakers, CacheDuration);
         return speakers;
     }
 
     private void InvalidateSpeakersCache()
     {
         _cache.Remove(SpeakersCacheKey);
+        _cache.Remove($"{SpeakersCacheKey}_sunday");
+        _cache.Remove($"{SpeakersCacheKey}_gospel");
+        _cache.Remove($"{SpeakersCacheKey}_special");
     }
 
     private async Task<PagedResult<MessageMeetingDto>> GetPagedResultAsync(

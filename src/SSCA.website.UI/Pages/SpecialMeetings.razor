@@ -197,7 +197,7 @@
 
     private async Task LoadSpeakers()
     {
-        speakers = await SpeakerService.GetSpeakersAsync();
+        speakers = await SpeakerService.GetSpeakersAsync("special");
     }
 
     private async Task LoadMeetings()

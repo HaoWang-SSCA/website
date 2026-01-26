@@ -9,8 +9,8 @@ namespace SSCA.website.UI.Services;
 public class SpeakerService
 {
     private readonly HttpClient _http;
-    private List<string>? _cachedSpeakers;
-    private Task<List<string>>? _loadingTask;
+    private Dictionary<string, List<string>> _cachedSpeakers = new();
+    private Dictionary<string, Task<List<string>>> _loadingTasks = new();
 
     public SpeakerService(HttpClient http)
     {
@@ -18,41 +18,51 @@ public class SpeakerService
     }
 
     /// <summary>
-    /// Gets the list of distinct speakers. Uses cached data if available.
+    /// Gets the list of distinct speakers for a specific meeting type. Uses cached data if available.
+    /// types: null (all), "sunday", "gospel", "special"
     /// </summary>
-    public async Task<List<string>> GetSpeakersAsync()
+    public async Task<List<string>> GetSpeakersAsync(string? type = null)
     {
+        var key = type ?? "all";
+
         // Return cached data if available
-        if (_cachedSpeakers != null)
+        if (_cachedSpeakers.TryGetValue(key, out var speakers))
         {
-            return _cachedSpeakers;
+            return speakers;
         }
 
-        // If already loading, wait for the existing task
-        if (_loadingTask != null)
+        // If already loading this type, wait for the existing task
+        if (_loadingTasks.TryGetValue(key, out var task))
         {
-            return await _loadingTask;
+            return await task;
         }
 
         // Start loading
-        _loadingTask = LoadSpeakersFromApiAsync();
+        var loadingTask = LoadSpeakersFromApiAsync(type);
+        _loadingTasks[key] = loadingTask;
         
         try
         {
-            _cachedSpeakers = await _loadingTask;
-            return _cachedSpeakers;
+            var result = await loadingTask;
+            _cachedSpeakers[key] = result;
+            return result;
         }
         finally
         {
-            _loadingTask = null;
+            _loadingTasks.Remove(key);
         }
     }
 
-    private async Task<List<string>> LoadSpeakersFromApiAsync()
+    private async Task<List<string>> LoadSpeakersFromApiAsync(string? type)
     {
         try
         {
-            var speakers = await _http.GetFromJsonAsync<List<string>>("api/meetings/speakers");
+            var url = "api/meetings/speakers";
+            if (!string.IsNullOrEmpty(type))
+            {
+                url += $"?type={type}";
+            }
+            var speakers = await _http.GetFromJsonAsync<List<string>>(url);
             return speakers ?? new List<string>();
         }
         catch (Exception ex)
@@ -63,11 +73,10 @@ public class SpeakerService
     }
 
     /// <summary>
-    /// Invalidates the cache, forcing a refresh on next request.
-    /// Call this when a meeting is created/updated/deleted.
+    /// Invalidates all speaker caches.
     /// </summary>
     public void InvalidateCache()
     {
-        _cachedSpeakers = null;
+        _cachedSpeakers.Clear();
     }
 }

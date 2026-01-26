@@ -60,7 +60,8 @@ public class MeetingsFunction
     public async Task<IActionResult> GetSpeakers(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/speakers")] HttpRequest req)
     {
-        var speakers = await _meetingService.GetDistinctSpeakersAsync();
+        var type = req.Query["type"];
+        var speakers = await _meetingService.GetDistinctSpeakersAsync(type);
         return new OkObjectResult(speakers);
     }
 
