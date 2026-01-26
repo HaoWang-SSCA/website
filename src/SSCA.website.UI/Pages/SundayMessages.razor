@@ -93,7 +93,6 @@
                                         <iframe src="@GetEmbedUrl(meeting.VideoUrl)" 
                                                 title="YouTube video player" 
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                                referrerpolicy="strict-origin-when-cross-origin"
                                                 allowfullscreen></iframe>
                                     </div>
                                 </div>
@@ -182,8 +181,8 @@
 
         if (!string.IsNullOrEmpty(videoId))
         {
-            var origin = Uri.EscapeDataString(Navigation.BaseUri.TrimEnd('/'));
-            return $"https://www.youtube.com/embed/{videoId}?origin={origin}";
+            // Use youtube-nocookie.com for enhanced privacy and avoid blocking issues
+            return $"https://www.youtube-nocookie.com/embed/{videoId}";
         }
         
         return videoUrl;
