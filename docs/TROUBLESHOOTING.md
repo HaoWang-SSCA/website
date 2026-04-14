@@ -216,6 +216,15 @@ public AdminMeetingsFunction(
 
 ---
 
+### Function Language Info Missing
+**Error:** `Cannot deploy to the function app because Function language info isn't provided.`
+
+**Cause:** Azure Static Web Apps cannot determine the runtime of the linked API.
+
+**Solution:** Add the `apiRuntime` to `staticwebapp.config.json`. See the [detailed guide](./deployment/FIX_FUNCTION_RUNTIME_ERROR.md) for more info.
+
+---
+
 ## Debugging Tips
 
 ### Check Auth Status
