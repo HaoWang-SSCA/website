@@ -95,7 +95,8 @@ jobs:
       - name: Get Function App Name
         id: get-fa
         run: |
-          FA_NAME=$(az functionapp list --resource-group ssca-bc-prod-rg --query "[0].name" -o tsv)
+          FA_NAME=$(az functionapp list --resource-group ssca-bc-prod-rg --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }} --query "[0].name" -o tsv)
+          echo "Function App found: $FA_NAME"
           echo "name=$FA_NAME" >> $GITHUB_OUTPUT
 
       - name: Deploy Function App
