@@ -84,8 +84,8 @@ module "ssca_website" {
   storage_account_tier     = "Standard"
   storage_replication_type = "LRS"
 
-  # Static Web App
-  static_web_app_sku = "Free"
+  # Static Web App (Standard required for linked Function App backend)
+  static_web_app_sku = "Standard"
 
   # Function App
   function_app_sku = "Y1"
