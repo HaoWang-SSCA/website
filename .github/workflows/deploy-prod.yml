@@ -96,6 +96,10 @@ jobs:
         id: get-fa
         run: |
           FA_NAME=$(az functionapp list --resource-group ssca-bc-prod-rg --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }} --query "[0].name" -o tsv)
+          if [ -z "$FA_NAME" ]; then
+            echo "::error::No Function App found in resource group ssca-bc-prod-rg"
+            exit 1
+          fi
           echo "Function App found: $FA_NAME"
           echo "name=$FA_NAME" >> $GITHUB_OUTPUT
 
