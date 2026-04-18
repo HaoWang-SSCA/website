@@ -62,7 +62,7 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOY_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "output/wwwroot/wwwroot"
+          app_location: "output/wwwroot"
           skip_app_build: true
           skip_api_build: true
 
