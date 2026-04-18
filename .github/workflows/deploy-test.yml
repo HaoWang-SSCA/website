@@ -85,8 +85,14 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get Function App Name
+        id: get-fa
+        run: |
+          FA_NAME=$(az functionapp list --resource-group ssca-bc-test-rg --query "[0].name" -o tsv)
+          echo "name=$FA_NAME" >> $GITHUB_OUTPUT
+
       - name: Deploy Function App
         uses: Azure/functions-action@v1
         with:
-          app-name: ${{ secrets.FUNCTION_APP_NAME }}
+          app-name: ${{ steps.get-fa.outputs.name }}
           package: output/api
