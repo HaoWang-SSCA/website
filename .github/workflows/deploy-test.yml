@@ -91,6 +91,11 @@ jobs:
           FA_NAME=$(az functionapp list --resource-group ssca-bc-test-rg --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }} --query "[0].name" -o tsv)
           echo "Function App found: $FA_NAME"
           echo "name=$FA_NAME" >> $GITHUB_OUTPUT
+          
+      - name: Inspect API output
+        run: |
+          echo "=== API OUTPUT ==="
+          ls -R output/api
 
       - name: Deploy Function App
         uses: Azure/functions-action@v1
