@@ -63,10 +63,10 @@ jobs:
             -var="aad_client_secret=${{ secrets.AAD_CLIENT_SECRET }}" \
             -out=tfplan \
             -no-color
-        continue-on-error: true
+
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: steps.plan.outcome == 'success' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: terraform apply -auto-approve tfplan
 
       - name: Update GitHub Environment Secrets
