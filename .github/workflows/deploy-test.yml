@@ -34,11 +34,19 @@ jobs:
           cd src/SSCA.website.API
           dotnet publish -c Release -o ../../output/api
 
+      - name: Verify API build output
+        run: |
+          echo "=== Checking .azurefunctions ==="
+          ls -la output/api/.azurefunctions/
+          echo "=== Checking functions.metadata ==="
+          head -5 output/api/functions.metadata
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: output/
+          include-hidden-files: true
           retention-days: 1
 
   deploy-swa:
@@ -52,6 +60,9 @@ jobs:
         with:
           name: build-output
           path: output/
+          
+      - name: Inspect UI output
+        run: ls -R output/wwwroot
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
@@ -85,8 +96,28 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get Function App Name
+        id: get-fa
+        run: |
+          FA_NAME=$(az functionapp list --resource-group ssca-bc-test-rg --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }} --query "[0].name" -o tsv)
+          if [ -z "$FA_NAME" ]; then
+            echo "::error::No Function App found in resource group ssca-bc-test-rg"
+            exit 1
+          fi
+          echo "Function App found: $FA_NAME"
+          echo "name=$FA_NAME" >> $GITHUB_OUTPUT
+          
+      - name: Inspect API output
+        run: |
+          echo "=== API OUTPUT ==="
+          ls -R output/api
+          echo "=== .azurefunctions ==="
+          ls -la output/api/.azurefunctions/
+
       - name: Deploy Function App
-        uses: Azure/functions-action@v1
+        uses: Azure/functions-action@v1.5.2
         with:
-          app-name: ${{ secrets.FUNCTION_APP_NAME }}
+          app-name: ${{ steps.get-fa.outputs.name }}
           package: output/api
+          scm-do-build-during-deployment: 'false'
+          enable-oryx-build: 'false'

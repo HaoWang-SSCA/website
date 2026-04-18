@@ -75,7 +75,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           terraform output -raw static_web_app_api_key | gh secret set SWA_DEPLOY_TOKEN --env test
-          terraform output -raw function_app_name | gh secret set FUNCTION_APP_NAME --env test
 
       - name: Output Values
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
