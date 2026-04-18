@@ -44,9 +44,7 @@
             }
         }
     },
-    "platform": {
-        "apiRuntime": "dotnet-isolated:8.0"
-    },
+    "platform": {},
     "globalHeaders": {
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "SAMEORIGIN",

@@ -1,15 +1,13 @@
-# Input Variables for SSCA-BC Website Infrastructure
+# Input Variables for SSCA-BC Website Infrastructure Module
 
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
-  default     = "ssca-bc"
 }
 
 variable "environment" {
-  description = "Environment (dev, staging, prod)"
+  description = "Environment (test, prod)"
   type        = string
-  default     = "prod"
 }
 
 variable "location" {
@@ -21,7 +19,6 @@ variable "location" {
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "ssca-bc-rg"
 }
 
 # PostgreSQL Configuration - Shared Server
@@ -37,9 +34,8 @@ variable "postgres_port" {
 }
 
 variable "postgres_database_name" {
-  description = "Name of the database to create on the shared server"
+  description = "Name of the database on the shared server"
   type        = string
-  default     = "ssca"
 }
 
 variable "postgres_username" {
@@ -64,37 +60,28 @@ variable "storage_account_tier" {
 variable "storage_replication_type" {
   description = "Storage replication type"
   type        = string
-  default     = "LRS" # Locally redundant storage
+  default     = "LRS"
 }
 
 # Static Web App Configuration
 variable "static_web_app_sku" {
-  description = "Azure Static Web App SKU"
+  description = "Azure Static Web App SKU (Free or Standard)"
   type        = string
-  default     = "Free" # Free or Standard
+  default     = "Free"
 }
 
-variable "github_repo_url" {
-  description = "GitHub repository URL"
+# Function App Configuration
+variable "function_app_sku" {
+  description = "Function App Service Plan SKU (Y1=Consumption, B1=Basic)"
   type        = string
-  default     = "https://github.com/HaoWang-SSCA/website"
-}
-
-variable "github_branch" {
-  description = "GitHub branch for deployment"
-  type        = string
-  default     = "main"
+  default     = "Y1"
 }
 
 # Tags
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
-  default = {
-    Project     = "SSCA-BC Website"
-    Environment = "Production"
-    ManagedBy   = "Terraform"
-  }
+  default     = {}
 }
 
 # Azure AD Authentication (for Static Web App)

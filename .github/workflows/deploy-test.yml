@@ -1,0 +1,87 @@
+name: Deploy Test Environment
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: |
+          cd src
+          dotnet restore SSCA.website.UI/SSCA_BC.csproj
+          dotnet restore SSCA.website.API/SSCA.website.API.csproj
+
+      - name: Build UI
+        run: |
+          cd src/SSCA.website.UI
+          dotnet publish -c Release -o ../../output/wwwroot
+
+      - name: Build API
+        run: |
+          cd src/SSCA.website.API
+          dotnet publish -c Release -o ../../output/api
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: output/
+          retention-days: 1
+
+  deploy-swa:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy SWA (Test)
+    environment: test
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: output/
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOY_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "output/wwwroot/wwwroot"
+          skip_app_build: true
+          skip_api_build: true
+
+  deploy-api:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy Function App (Test)
+    environment: test
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: output/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ secrets.FUNCTION_APP_NAME }}
+          package: output/api

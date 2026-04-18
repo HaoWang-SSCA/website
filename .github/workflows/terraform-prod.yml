@@ -1,0 +1,74 @@
+name: Terraform Production
+
+on:
+  push:
+    branches: [prod]
+    paths: ['infrastructure/**']
+  workflow_dispatch:
+
+env:
+  TF_WORKING_DIR: infrastructure/environments/prod
+  ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply (Production)
+    runs-on: ubuntu-latest
+    environment: production
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6"
+          terraform_wrapper: false
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var="postgres_username=${{ secrets.POSTGRES_USERNAME }}" \
+            -var="postgres_password=${{ secrets.POSTGRES_PASSWORD }}" \
+            -var="aad_client_id=${{ secrets.AAD_CLIENT_ID }}" \
+            -var="aad_client_secret=${{ secrets.AAD_CLIENT_SECRET }}" \
+            -out=tfplan \
+            -no-color
+        continue-on-error: true
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/prod' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: terraform apply -auto-approve tfplan
+
+      - name: Update GitHub Environment Secrets
+        if: github.ref == 'refs/heads/prod' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          terraform output -raw static_web_app_api_key | gh secret set SWA_DEPLOY_TOKEN --env production
+          terraform output -raw function_app_name | gh secret set FUNCTION_APP_NAME --env production
+
+      - name: Output Values
+        if: github.ref == 'refs/heads/prod' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: |
+          echo "## Terraform Outputs (Production)" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          terraform output -no-color >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

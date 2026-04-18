@@ -1,4 +1,4 @@
-# Output Values for SSCA-BC Website Infrastructure
+# Output Values for SSCA-BC Website Infrastructure Module
 
 # Resource Group
 output "resource_group_name" {
@@ -14,13 +14,24 @@ output "static_web_app_name" {
 
 output "static_web_app_url" {
   description = "The default URL of the Static Web App"
-  value       = azurerm_static_web_app.website.default_host_name
+  value       = "https://${azurerm_static_web_app.website.default_host_name}"
 }
 
 output "static_web_app_api_key" {
   description = "The API key for Static Web App deployment"
   value       = azurerm_static_web_app.website.api_key
   sensitive   = true
+}
+
+# Function App
+output "function_app_name" {
+  description = "The name of the Function App"
+  value       = azurerm_linux_function_app.api.name
+}
+
+output "function_app_url" {
+  description = "The default URL of the Function App"
+  value       = "https://${azurerm_linux_function_app.api.default_hostname}"
 }
 
 # PostgreSQL (Shared Server)
@@ -62,6 +73,7 @@ output "app_configuration" {
   description = "Configuration values needed for the application"
   value = {
     static_web_app_url = "https://${azurerm_static_web_app.website.default_host_name}"
+    function_app_url   = "https://${azurerm_linux_function_app.api.default_hostname}"
     storage_base_url   = azurerm_storage_account.media.primary_blob_endpoint
   }
 }
