@@ -41,11 +41,19 @@ jobs:
           cd src/SSCA.website.API
           dotnet publish -c Release -o ../../output/api
 
+      - name: Verify API build output
+        run: |
+          echo "=== Checking .azurefunctions ==="
+          ls -la output/api/.azurefunctions/
+          echo "=== Checking functions.metadata ==="
+          head -5 output/api/functions.metadata
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: output/
+          include-hidden-files: true
           retention-days: 1
 
   deploy-swa:
