@@ -12,10 +12,12 @@ namespace SSCA.website.API.Functions;
 public class MeetingsFunction
 {
     private readonly IMeetingService _meetingService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public MeetingsFunction(IMeetingService meetingService)
+    public MeetingsFunction(IMeetingService meetingService, IFileStorageService fileStorageService)
     {
         _meetingService = meetingService;
+        _fileStorageService = fileStorageService;
     }
 
     [Function("GetSundayMessages")]
@@ -63,6 +65,21 @@ public class MeetingsFunction
         var type = req.Query["type"];
         var speakers = await _meetingService.GetDistinctSpeakersAsync(type);
         return new OkObjectResult(speakers);
+    }
+
+    [Function("GetAudioFile")]
+    public async Task<IActionResult> GetAudioFile(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/audio/{*name}")] HttpRequest req,
+        string name)
+    {
+        var stream = await _fileStorageService.DownloadFileAsync(name, "audio-files");
+        if (stream == null)
+            return new NotFoundResult();
+
+        return new FileStreamResult(stream, "audio/mpeg")
+        {
+            FileDownloadName = Path.GetFileName(name)
+        };
     }
 
     private static MeetingSearchQuery ParseQuery(HttpRequest req)
