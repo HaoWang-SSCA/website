@@ -1820,6 +1820,7 @@ h3 {
     margin-top: 0.5rem;
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
 }
@@ -1871,9 +1872,7 @@ h3 {
 }
 
 .audio-player {
-    flex: 1;
-    min-width: 0;
-    max-width: 300px;
+    width: 100%;
     height: 40px;
     border-radius: 8px;
     display: block;
