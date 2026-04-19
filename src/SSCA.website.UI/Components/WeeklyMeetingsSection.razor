@@ -1,4 +1,6 @@
 @* Weekly Meetings Section *@
+@using SSCA.website.Shared.Models
+@inject HttpClient Http
 
 <section class="section meetings-section" id="meetings">
     <div class="container">
@@ -103,26 +105,31 @@
                             7:30 PM - 9:00 PM
                         </div>
                         <div class="meeting-details friday-groups">
-                            <div class="group-item">
-                                <span class="group-tag">中文组</span>
-                                <div class="meeting-name">
-                                    <strong>《罗马书</strong>
-                                    <span>Romans </span>
+                            @if (fridayGroups != null && fridayGroups.Count > 0)
+                            {
+                                @foreach (var group in fridayGroups)
+                                {
+                                    <div class="group-item">
+                                        <span class="group-tag @(group.GroupName.Contains("English", StringComparison.OrdinalIgnoreCase) ? "english" : "")">@group.GroupName</span>
+                                        <div class="meeting-name">
+                                            <strong>《@group.BookName》</strong>
+                                            @if (!string.IsNullOrEmpty(group.BookEnglishName))
+                                            {
+                                                <span>@group.BookEnglishName</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="group-item">
+                                    <span class="group-tag">查经小组</span>
+                                    <div class="meeting-name">
+                                        <strong>Bible Study Groups</strong>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="group-item">
-                                <span class="group-tag">福音组</span>
-                                <div class="meeting-name">
-                                    <strong>《约翰福音》</strong>
-                                    <span>John</span>
-                                </div>
-                            </div>
-                            <div class="group-item">
-                                <span class="group-tag english">English</span>
-                                <div class="meeting-name">
-                                    <strong>Matthew</strong>
-                                </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -362,3 +369,20 @@
         border-left-color: var(--primary);
     }
 </style>
+
+@code {
+    private List<FridayGroupDto>? fridayGroups;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            fridayGroups = await Http.GetFromJsonAsync<List<FridayGroupDto>>("api/friday-groups");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading Friday groups: {ex.Message}");
+            fridayGroups = new List<FridayGroupDto>();
+        }
+    }
+}
