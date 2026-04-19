@@ -153,7 +153,7 @@
         var nextIndex = (currentIndex + 1) % SpeedOptions.Length;
         var newSpeed = SpeedOptions[nextIndex];
         playbackSpeeds[meetingId] = newSpeed;
-        await JS.InvokeVoidAsync("eval", $"document.getElementById('audio-{meetingId}').playbackRate = {newSpeed}");
+        await JS.InvokeVoidAsync("setAudioPlaybackRate", $"audio-{meetingId}", newSpeed);
     }
 
     private void ToggleVideo(Guid id)
