@@ -77,9 +77,13 @@
                                         <audio controls preload="none" class="audio-player" id="audio-@meeting.Id">
                                             <source src="@meeting.AudioUrl" type="audio/mpeg">
                                         </audio>
-                                        <button class="btn-speed" title="播放速度 Playback Speed" @onclick="() => CycleSpeed(meeting.Id)">
-                                            @(playbackSpeeds.ContainsKey(meeting.Id) ? $"{playbackSpeeds[meeting.Id]:0.0#}x" : "1x")
-                                        </button>
+                                        <select class="speed-select" title="播放速度 Playback Speed"
+                                                @onchange="(e) => SetSpeed(meeting.Id, e)">
+                                            @foreach (var speed in SpeedOptions)
+                                            {
+                                                <option value="@speed" selected="@(GetCurrentSpeed(meeting.Id) == speed)">@($"{speed:0.0#}x")</option>
+                                            }
+                                        </select>
                                         <a href="@($"api/meetings/{meeting.Id}/download")" download class="btn-download" title="下载音频 Download">
                                             <span class="material-symbols-outlined">download</span>
                                         </a>
@@ -145,16 +149,18 @@
     private DateTime? dateTo;
     private HashSet<Guid> expandedVideoIds = new();
     private Dictionary<Guid, double> playbackSpeeds = new();
-    private static readonly double[] SpeedOptions = { 1.0, 1.25, 1.5, 1.75, 2.0, 0.75 };
+    private static readonly double[] SpeedOptions = { 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0 };
 
-    private async Task CycleSpeed(Guid meetingId)
+    private double GetCurrentSpeed(Guid meetingId) =>
+        playbackSpeeds.TryGetValue(meetingId, out var speed) ? speed : 1.0;
+
+    private async Task SetSpeed(Guid meetingId, ChangeEventArgs e)
     {
-        var current = playbackSpeeds.ContainsKey(meetingId) ? playbackSpeeds[meetingId] : 1.0;
-        var currentIndex = Array.IndexOf(SpeedOptions, current);
-        var nextIndex = (currentIndex + 1) % SpeedOptions.Length;
-        var newSpeed = SpeedOptions[nextIndex];
-        playbackSpeeds[meetingId] = newSpeed;
-        await JS.InvokeVoidAsync("setAudioPlaybackRate", $"audio-{meetingId}", newSpeed);
+        if (double.TryParse(e.Value?.ToString(), out var newSpeed))
+        {
+            playbackSpeeds[meetingId] = newSpeed;
+            await JS.InvokeVoidAsync("setAudioPlaybackRate", $"audio-{meetingId}", newSpeed);
+        }
     }
 
     private void ToggleVideo(Guid id)

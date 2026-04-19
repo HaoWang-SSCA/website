@@ -1848,27 +1848,22 @@ h3 {
     font-size: 1.2rem;
 }
 
-.btn-speed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
+.speed-select {
     height: 36px;
     padding: 0 0.4rem;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     background: rgba(19, 127, 236, 0.1);
     color: var(--primary);
-    border: none;
+    border: 1px solid rgba(19, 127, 236, 0.2);
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
-    transition: all 0.2s ease;
     flex-shrink: 0;
+    outline: none;
 }
 
-.btn-speed:hover {
-    background: var(--primary);
-    color: white;
+.speed-select:focus {
+    border-color: var(--primary);
 }
 
 .audio-player {
