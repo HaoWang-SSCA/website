@@ -72,14 +72,22 @@ public class MeetingsFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/audio/{*name}")] HttpRequest req,
         string name)
     {
-        var stream = await _fileStorageService.DownloadFileAsync(name, "audio-files");
+        var (stream, contentLength) = await _fileStorageService.DownloadFileWithLengthAsync(name, "audio-files");
         if (stream == null)
             return new NotFoundResult();
 
-        return new FileStreamResult(stream, "audio/mpeg")
+        var result = new FileStreamResult(stream, "audio/mpeg")
         {
-            FileDownloadName = Path.GetFileName(name)
+            EnableRangeProcessing = true
         };
+
+        // Set Content-Disposition for downloads
+        if (req.Query.ContainsKey("download"))
+        {
+            result.FileDownloadName = Path.GetFileName(name);
+        }
+
+        return result;
     }
 
     private static MeetingSearchQuery ParseQuery(HttpRequest req)

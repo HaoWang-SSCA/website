@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(dotnet publish *)",
+      "Bash(ls /c/Projects/HaoWang-SSCA/website/output/api/*.deps.json /c/Projects/HaoWang-SSCA/website/output/api/host.json /c/Projects/HaoWang-SSCA/website/output/api/*.dll)",
+      "Bash(ls *)",
+      "Bash(dotnet list *)",
+      "Bash(dotnet restore *)",
+      "Bash(gh run *)",
+      "Bash(dotnet build *)",
+      "Bash(xargs grep *)",
+      "Bash(git branch *)",
+      "Bash(dotnet ef *)"
+    ]
+  }
+}
