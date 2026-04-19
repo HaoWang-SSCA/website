@@ -1848,6 +1848,29 @@ h3 {
     font-size: 1.2rem;
 }
 
+.btn-speed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.4rem;
+    border-radius: 1rem;
+    background: rgba(19, 127, 236, 0.1);
+    color: var(--primary);
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-speed:hover {
+    background: var(--primary);
+    color: white;
+}
+
 .audio-player {
     width: 100%;
     min-width: 200px;
