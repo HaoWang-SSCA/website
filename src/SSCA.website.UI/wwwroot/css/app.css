@@ -1819,7 +1819,6 @@ h3 {
 .audio-container {
     margin-top: 0.5rem;
     width: 100%;
-    min-width: 200px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1872,16 +1871,12 @@ h3 {
 }
 
 .audio-player {
-    width: 100%;
-    min-width: 200px;
+    flex: 1;
+    min-width: 0;
     max-width: 300px;
     height: 40px;
     border-radius: 8px;
     display: block;
-}
-
-.meeting-actions .audio-player {
-    max-width: 250px;
 }
 
 /* Media Links in Admin Table */

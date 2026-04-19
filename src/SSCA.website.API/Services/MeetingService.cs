@@ -217,7 +217,7 @@ public class MeetingService : IMeetingService
             Topic = meeting.Topic,
             AudioUrl = string.IsNullOrEmpty(meeting.AudioBlobName)
                 ? null
-                : $"/api/meetings/audio/{meeting.AudioBlobName}",
+                : $"{_storageBaseUrl}/audio-files/{meeting.AudioBlobName}",
             VideoUrl = meeting.VideoUrl,
             IsGospel = meeting.IsGospel,
             IsSpecialMeeting = meeting.IsSpecialMeeting,

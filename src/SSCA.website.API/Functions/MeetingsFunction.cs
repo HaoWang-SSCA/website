@@ -67,27 +67,29 @@ public class MeetingsFunction
         return new OkObjectResult(speakers);
     }
 
-    [Function("GetAudioFile")]
-    public async Task<IActionResult> GetAudioFile(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/audio/{*name}")] HttpRequest req,
-        string name)
+    [Function("DownloadAudio")]
+    public async Task<IActionResult> DownloadAudio(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/{id:guid}/download")] HttpRequest req,
+        Guid id)
     {
-        var (stream, contentLength) = await _fileStorageService.DownloadFileWithLengthAsync(name, "audio-files");
+        var meeting = await _meetingService.GetByIdAsync(id);
+        if (meeting == null || string.IsNullOrEmpty(meeting.AudioUrl))
+            return new NotFoundResult();
+
+        // Extract blob name from the AudioUrl
+        var blobName = meeting.AudioUrl.Split("/audio-files/", 2).LastOrDefault();
+        if (string.IsNullOrEmpty(blobName))
+            return new NotFoundResult();
+
+        var stream = await _fileStorageService.DownloadFileAsync(blobName, "audio-files");
         if (stream == null)
             return new NotFoundResult();
 
-        var result = new FileStreamResult(stream, "audio/mpeg")
+        var fileName = Path.GetFileName(blobName);
+        return new FileStreamResult(stream, "audio/mpeg")
         {
-            EnableRangeProcessing = true
+            FileDownloadName = fileName
         };
-
-        // Set Content-Disposition for downloads
-        if (req.Query.ContainsKey("download"))
-        {
-            result.FileDownloadName = Path.GetFileName(name);
-        }
-
-        return result;
     }
 
     private static MeetingSearchQuery ParseQuery(HttpRequest req)

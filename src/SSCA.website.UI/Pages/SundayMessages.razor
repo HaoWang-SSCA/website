@@ -79,7 +79,7 @@
                                         <button class="btn-speed" title="播放速度 Playback Speed" @onclick="() => CycleSpeed(meeting.Id)">
                                             @(playbackSpeeds.ContainsKey(meeting.Id) ? $"{playbackSpeeds[meeting.Id]:0.0#}x" : "1x")
                                         </button>
-                                        <a href="@meeting.AudioUrl" download class="btn-download" title="下载音频 Download">
+                                        <a href="@($"api/meetings/{meeting.Id}/download")" download class="btn-download" title="下载音频 Download">
                                             <span class="material-symbols-outlined">download</span>
                                         </a>
                                     </div>
