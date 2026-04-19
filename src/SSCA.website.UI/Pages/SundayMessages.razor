@@ -75,6 +75,9 @@
                                         <audio controls preload="none" class="audio-player">
                                             <source src="@meeting.AudioUrl" type="audio/mpeg">
                                         </audio>
+                                        <a href="@meeting.AudioUrl" download class="btn-download" title="下载音频 Download">
+                                            <span class="material-symbols-outlined">download</span>
+                                        </a>
                                     </div>
                                 }
                                 @if (!string.IsNullOrEmpty(meeting.VideoUrl))

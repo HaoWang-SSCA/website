@@ -1820,6 +1820,32 @@ h3 {
     margin-top: 0.5rem;
     width: 100%;
     min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(19, 127, 236, 0.1);
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-download:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-download .material-symbols-outlined {
+    font-size: 1.2rem;
 }
 
 .audio-player {
