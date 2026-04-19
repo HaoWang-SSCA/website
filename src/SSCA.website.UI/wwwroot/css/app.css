@@ -1318,7 +1318,6 @@ h3 {
     display: flex;
     background: white;
     border-radius: 0.75rem;
-    overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--slate-200);
     transition: transform 0.2s, box-shadow 0.2s;
@@ -1346,6 +1345,7 @@ h3 {
         gap: 0.5rem;
         padding: 1rem 1.5rem;
         min-width: auto;
+        border-radius: 0.75rem 0.75rem 0 0;
     }
 
     .meeting-date .day {
@@ -1384,6 +1384,7 @@ h3 {
     background: linear-gradient(135deg, var(--primary), #1a5fb4);
     color: white;
     min-width: 5rem;
+    border-radius: 0.75rem 0 0 0.75rem;
 }
 
 .meeting-date .day {
@@ -1819,20 +1820,58 @@ h3 {
 .audio-container {
     margin-top: 0.5rem;
     width: 100%;
-    min-width: 200px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(19, 127, 236, 0.1);
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-download:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-download .material-symbols-outlined {
+    font-size: 1.2rem;
+}
+
+.speed-select {
+    height: 36px;
+    padding: 0 0.4rem;
+    border-radius: 0.5rem;
+    background: rgba(19, 127, 236, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(19, 127, 236, 0.2);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.speed-select:focus {
+    border-color: var(--primary);
 }
 
 .audio-player {
     width: 100%;
-    min-width: 200px;
-    max-width: 300px;
     height: 40px;
     border-radius: 8px;
     display: block;
-}
-
-.meeting-actions .audio-player {
-    max-width: 250px;
 }
 
 /* Media Links in Admin Table */

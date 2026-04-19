@@ -75,7 +75,7 @@ module "ssca_website" {
   # PostgreSQL
   postgres_host          = "shared-data.postgres.database.azure.com"
   postgres_port          = 5432
-  postgres_database_name = "ssca"
+  postgres_database_name = "ssca-test"
 
   postgres_username = var.postgres_username
   postgres_password = var.postgres_password

@@ -12,10 +12,12 @@ namespace SSCA.website.API.Functions;
 public class MeetingsFunction
 {
     private readonly IMeetingService _meetingService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public MeetingsFunction(IMeetingService meetingService)
+    public MeetingsFunction(IMeetingService meetingService, IFileStorageService fileStorageService)
     {
         _meetingService = meetingService;
+        _fileStorageService = fileStorageService;
     }
 
     [Function("GetSundayMessages")]
@@ -63,6 +65,31 @@ public class MeetingsFunction
         var type = req.Query["type"];
         var speakers = await _meetingService.GetDistinctSpeakersAsync(type);
         return new OkObjectResult(speakers);
+    }
+
+    [Function("DownloadAudio")]
+    public async Task<IActionResult> DownloadAudio(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "meetings/{id:guid}/download")] HttpRequest req,
+        Guid id)
+    {
+        var meeting = await _meetingService.GetByIdAsync(id);
+        if (meeting == null || string.IsNullOrEmpty(meeting.AudioUrl))
+            return new NotFoundResult();
+
+        // Extract blob name from the AudioUrl
+        var blobName = meeting.AudioUrl.Split("/audio-files/", 2).LastOrDefault();
+        if (string.IsNullOrEmpty(blobName))
+            return new NotFoundResult();
+
+        var stream = await _fileStorageService.DownloadFileAsync(blobName, "audio-files");
+        if (stream == null)
+            return new NotFoundResult();
+
+        var fileName = Path.GetFileName(blobName);
+        return new FileStreamResult(stream, "audio/mpeg")
+        {
+            FileDownloadName = fileName
+        };
     }
 
     private static MeetingSearchQuery ParseQuery(HttpRequest req)

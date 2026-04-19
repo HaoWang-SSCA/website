@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<MessageMeeting> MessageMeetings { get; set; } = null!;
     public DbSet<HeroLink> HeroLinks { get; set; } = null!;
+    public DbSet<FridayGroup> FridayGroups { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,21 @@ public class AppDbContext : DbContext
                 .HasMaxLength(500);
             entity.Property(e => e.VideoUrl)
                 .HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<FridayGroup>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DisplayOrder);
+
+            entity.Property(e => e.GroupName)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(e => e.BookName)
+                .IsRequired()
+                .HasMaxLength(200);
+            entity.Property(e => e.BookEnglishName)
+                .HasMaxLength(200);
         });
 
         modelBuilder.Entity<HeroLink>(entity =>

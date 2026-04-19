@@ -39,6 +39,9 @@ var host = new HostBuilder()
         // Add HeroLinkService
         services.AddScoped<IHeroLinkService, HeroLinkService>();
 
+        // Add FridayGroupService
+        services.AddScoped<IFridayGroupService, FridayGroupService>();
+
         // Add Azure Blob Storage
         services.AddSingleton(sp =>
         {
