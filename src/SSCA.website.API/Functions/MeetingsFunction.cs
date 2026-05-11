@@ -104,6 +104,7 @@ public class MeetingsFunction
 
         query.Speaker = req.Query["speaker"];
         query.Topic = req.Query["topic"];
+        query.Scripture = req.Query["scripture"];
 
         if (DateTime.TryParse(req.Query["dateFrom"], out var dateFrom))
             query.DateFrom = dateFrom;

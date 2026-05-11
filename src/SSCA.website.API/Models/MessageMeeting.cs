@@ -21,8 +21,14 @@ public class MessageMeeting
     [MaxLength(200)]
     public string Topic { get; set; } = string.Empty;    // 信息主题
 
+    [MaxLength(300)]
+    public string? Scripture { get; set; }          // 经文
+
     [MaxLength(500)]
     public string? AudioBlobName { get; set; }      // Audio file in Azure Blob Storage
+
+    [MaxLength(500)]
+    public string? PowerPointBlobName { get; set; } // PowerPoint file in Azure Blob Storage
 
     [MaxLength(500)]
     public string? VideoUrl { get; set; }           // YouTube/Video link

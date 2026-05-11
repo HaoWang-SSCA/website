@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using SSCA.website.API.Data;
 using SSCA.website.API.Models;
 using SSCA.website.Shared.Models;
+using System.Text.RegularExpressions;
 
 namespace SSCA.website.API.Services;
 
@@ -75,10 +76,12 @@ public class MeetingService : IMeetingService
             Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc),
             Speaker = request.Speaker,
             Topic = request.Topic,
+            Scripture = request.Scripture,
             VideoUrl = request.VideoUrl,
             IsGospel = request.IsGospel,
             IsSpecialMeeting = request.IsSpecialMeeting,
             AudioBlobName = request.AudioBlobName,
+            PowerPointBlobName = request.PowerPointBlobName,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -97,11 +100,14 @@ public class MeetingService : IMeetingService
         meeting.Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc);
         meeting.Speaker = request.Speaker;
         meeting.Topic = request.Topic;
+        meeting.Scripture = request.Scripture;
         meeting.VideoUrl = request.VideoUrl;
         meeting.IsGospel = request.IsGospel;
         meeting.IsSpecialMeeting = request.IsSpecialMeeting;
         if (!string.IsNullOrEmpty(request.AudioBlobName))
             meeting.AudioBlobName = request.AudioBlobName;
+        if (!string.IsNullOrEmpty(request.PowerPointBlobName))
+            meeting.PowerPointBlobName = request.PowerPointBlobName;
         meeting.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -154,11 +160,18 @@ public class MeetingService : IMeetingService
             };
         }
 
-        var speakers = await query
+        var rawSpeakers = await query
             .Select(m => m.Speaker)
             .Distinct()
-            .OrderBy(s => s)
             .ToListAsync();
+
+        var speakers = rawSpeakers
+            .Select(CleanSpeakerName)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(GetSpeakerSortKey)
+            .ThenBy(s => s)
+            .ToList();
 
         _cache.Set(cacheKey, speakers, CacheDuration);
         return speakers;
@@ -177,10 +190,29 @@ public class MeetingService : IMeetingService
     {
         // Apply search filters
         if (!string.IsNullOrWhiteSpace(searchQuery.Speaker))
-            query = query.Where(m => m.Speaker.Contains(searchQuery.Speaker));
+        {
+            var speaker = searchQuery.Speaker.Trim();
+            var cleanedSpeaker = CleanSpeakerName(speaker);
+            var compactSpeaker = cleanedSpeaker.Replace(" ", "");
+            query = query.Where(m =>
+                m.Speaker.Contains(speaker) ||
+                m.Speaker.Contains(cleanedSpeaker) ||
+                m.Speaker.Contains(compactSpeaker) ||
+                m.Speaker.Contains(cleanedSpeaker + "弟兄") ||
+                m.Speaker.Contains(cleanedSpeaker + "姐妹") ||
+                m.Speaker.Contains(compactSpeaker + "弟兄") ||
+                m.Speaker.Contains(compactSpeaker + "姐妹") ||
+                m.Speaker.Contains("Bro. " + cleanedSpeaker) ||
+                m.Speaker.Contains("Brother " + cleanedSpeaker) ||
+                m.Speaker.Contains("Sis. " + cleanedSpeaker) ||
+                m.Speaker.Contains("Sister " + cleanedSpeaker));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchQuery.Topic))
             query = query.Where(m => m.Topic.Contains(searchQuery.Topic));
+
+        if (!string.IsNullOrWhiteSpace(searchQuery.Scripture))
+            query = query.Where(m => m.Scripture != null && m.Scripture.Contains(searchQuery.Scripture));
 
         if (searchQuery.DateFrom.HasValue)
             query = query.Where(m => m.Date >= searchQuery.DateFrom.Value);
@@ -213,11 +245,15 @@ public class MeetingService : IMeetingService
         {
             Id = meeting.Id,
             Date = meeting.Date,
-            Speaker = meeting.Speaker,
+            Speaker = CleanSpeakerName(meeting.Speaker),
             Topic = meeting.Topic,
+            Scripture = meeting.Scripture,
             AudioUrl = string.IsNullOrEmpty(meeting.AudioBlobName)
                 ? null
                 : $"{_storageBaseUrl}/audio-files/{meeting.AudioBlobName}",
+            PowerPointUrl = string.IsNullOrEmpty(meeting.PowerPointBlobName)
+                ? null
+                : $"{_storageBaseUrl}/powerpoint-files/{meeting.PowerPointBlobName}",
             VideoUrl = meeting.VideoUrl,
             IsGospel = meeting.IsGospel,
             IsSpecialMeeting = meeting.IsSpecialMeeting,
@@ -225,4 +261,60 @@ public class MeetingService : IMeetingService
             UpdatedAt = meeting.UpdatedAt
         };
     }
+
+    private static string CleanSpeakerName(string? speaker)
+    {
+        if (string.IsNullOrWhiteSpace(speaker)) return string.Empty;
+
+        var cleaned = speaker.Trim();
+        cleaned = Regex.Replace(cleaned, @"\s+", " ");
+        cleaned = Regex.Replace(cleaned, @"\b(Bro|Brother|Sis|Sister)\.?\b", "", RegexOptions.IgnoreCase);
+        cleaned = cleaned.Replace("弟兄", "").Replace("姐妹", "").Trim();
+        cleaned = Regex.Replace(cleaned, @"\s+", " ");
+        return cleaned;
+    }
+
+    private static string GetSpeakerSortKey(string speaker)
+    {
+        var cleaned = CleanSpeakerName(speaker);
+        var latinMatch = Regex.Match(cleaned, "[A-Za-z]");
+        if (latinMatch.Success)
+        {
+            var latinName = Regex.Replace(cleaned, "[^A-Za-z ]", "").Trim();
+            return $"0-{latinName.ToUpperInvariant()}";
+        }
+
+        return $"1-{GetPinyinSortKey(cleaned)}";
+    }
+
+    private static string GetPinyinSortKey(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+
+        var knownNames = new Dictionary<string, string>
+        {
+            ["王"] = "Wang", ["李"] = "Li", ["张"] = "Zhang", ["刘"] = "Liu", ["陈"] = "Chen",
+            ["杨"] = "Yang", ["黄"] = "Huang", ["赵"] = "Zhao", ["吴"] = "Wu", ["周"] = "Zhou",
+            ["徐"] = "Xu", ["孙"] = "Sun", ["马"] = "Ma", ["朱"] = "Zhu", ["胡"] = "Hu",
+            ["郭"] = "Guo", ["何"] = "He", ["林"] = "Lin", ["高"] = "Gao", ["罗"] = "Luo",
+            ["郑"] = "Zheng", ["梁"] = "Liang", ["谢"] = "Xie", ["宋"] = "Song", ["唐"] = "Tang",
+            ["许"] = "Xu", ["邓"] = "Deng", ["冯"] = "Feng", ["韩"] = "Han", ["曹"] = "Cao",
+            ["彭"] = "Peng", ["曾"] = "Zeng", ["萧"] = "Xiao", ["肖"] = "Xiao", ["田"] = "Tian",
+            ["董"] = "Dong", ["袁"] = "Yuan", ["潘"] = "Pan", ["蔡"] = "Cai", ["蒋"] = "Jiang",
+            ["余"] = "Yu", ["杜"] = "Du", ["叶"] = "Ye", ["程"] = "Cheng", ["苏"] = "Su",
+            ["魏"] = "Wei", ["吕"] = "Lu", ["丁"] = "Ding", ["沈"] = "Shen", ["任"] = "Ren",
+            ["姚"] = "Yao", ["卢"] = "Lu", ["姜"] = "Jiang", ["崔"] = "Cui", ["钟"] = "Zhong",
+            ["谭"] = "Tan", ["陆"] = "Lu", ["汪"] = "Wang", ["范"] = "Fan", ["金"] = "Jin",
+            ["石"] = "Shi", ["戴"] = "Dai", ["贾"] = "Jia", ["邱"] = "Qiu", ["方"] = "Fang"
+        };
+
+        foreach (var item in knownNames.OrderByDescending(k => k.Key.Length))
+        {
+            if (name.StartsWith(item.Key, StringComparison.Ordinal))
+                return item.Value + name;
+        }
+
+        return name;
+    }
+
 }
