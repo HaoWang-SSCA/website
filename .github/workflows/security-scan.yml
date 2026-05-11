@@ -28,4 +28,4 @@ jobs:
           gitleaks version
 
       - name: Scan working tree for secrets
-        run: gitleaks dir --source . --verbose --redact
+        run: gitleaks dir . --verbose --redact
