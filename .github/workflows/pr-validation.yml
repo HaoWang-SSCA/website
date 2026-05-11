@@ -1,0 +1,42 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [main, prod]
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    name: .NET build, test, and audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/SSCA.website.sln
+
+      - name: Build
+        run: dotnet build src/SSCA.website.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test src/SSCA.website.sln -c Release --no-build
+
+      - name: Audit API packages
+        run: |
+          set -o pipefail
+          dotnet list src/SSCA.website.API/SSCA.website.API.csproj package --vulnerable --include-transitive 2>&1 | tee /tmp/api-vulnerabilities.txt
+          ! grep -E "has the following vulnerable packages|> " /tmp/api-vulnerabilities.txt
+
+      - name: Audit UI packages
+        run: |
+          set -o pipefail
+          dotnet list src/SSCA.website.UI/SSCA_BC.csproj package --vulnerable --include-transitive 2>&1 | tee /tmp/ui-vulnerabilities.txt
+          ! grep -E "has the following vulnerable packages|> " /tmp/ui-vulnerabilities.txt

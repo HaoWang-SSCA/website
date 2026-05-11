@@ -4,13 +4,13 @@
         {
             "route": "/mgmt/*",
             "allowedRoles": [
-                "authenticated"
+                "admin"
             ]
         },
         {
             "route": "/api/mgmt/*",
             "allowedRoles": [
-                "authenticated"
+                "admin"
             ]
         }
     ],
