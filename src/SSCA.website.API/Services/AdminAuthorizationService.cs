@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace SSCA.website.API.Services;
@@ -13,12 +12,10 @@ public interface IAdminAuthorizationService
 
 public sealed class AdminAuthorizationService : IAdminAuthorizationService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<AdminAuthorizationService> _logger;
 
-    public AdminAuthorizationService(IConfiguration configuration, ILogger<AdminAuthorizationService> logger)
+    public AdminAuthorizationService(ILogger<AdminAuthorizationService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
     }
 
@@ -43,16 +40,7 @@ public sealed class AdminAuthorizationService : IAdminAuthorizationService
                 return false;
             }
 
-            if (principal.UserRoles?.Any(role => string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase)) == true)
-            {
-                return true;
-            }
-
-            var allowedEmails = (_configuration["Admin:AllowedEmails"] ?? string.Empty)
-                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            return allowedEmails.Any(email =>
-                string.Equals(email, principal.UserDetails, StringComparison.OrdinalIgnoreCase));
+            return principal.UserRoles?.Any(role => string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase)) == true;
         }
         catch (Exception ex)
         {
@@ -63,7 +51,6 @@ public sealed class AdminAuthorizationService : IAdminAuthorizationService
 
     private sealed class ClientPrincipal
     {
-        public string? UserDetails { get; set; }
         public string[]? UserRoles { get; set; }
     }
 }
