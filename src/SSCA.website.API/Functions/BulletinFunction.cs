@@ -8,16 +8,27 @@ namespace SSCA.website.API.Functions;
 public class BulletinFunction
 {
     private readonly IFileStorageService _fileStorageService;
+    private readonly IAdminAuthorizationService _adminAuthorization;
 
-    public BulletinFunction(IFileStorageService fileStorageService)
+    public BulletinFunction(IFileStorageService fileStorageService, IAdminAuthorizationService adminAuthorization)
     {
         _fileStorageService = fileStorageService;
+        _adminAuthorization = adminAuthorization;
+    }
+
+    private IActionResult? RequireAdmin(HttpRequest req)
+    {
+        return _adminAuthorization.IsAdmin(req)
+            ? null
+            : new UnauthorizedObjectResult("Admin authorization required.");
     }
 
     [Function("AdminUploadBulletin")]
     public async Task<IActionResult> UploadBulletin(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/bulletin-upload")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         if (!req.HasFormContentType || req.Form.Files.Count == 0)
             return new BadRequestObjectResult("No file uploaded");
 

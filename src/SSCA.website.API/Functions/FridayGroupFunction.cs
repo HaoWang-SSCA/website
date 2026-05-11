@@ -12,10 +12,19 @@ namespace SSCA.website.API.Functions;
 public class FridayGroupFunction
 {
     private readonly IFridayGroupService _fridayGroupService;
+    private readonly IAdminAuthorizationService _adminAuthorization;
 
-    public FridayGroupFunction(IFridayGroupService fridayGroupService)
+    public FridayGroupFunction(IFridayGroupService fridayGroupService, IAdminAuthorizationService adminAuthorization)
     {
         _fridayGroupService = fridayGroupService;
+        _adminAuthorization = adminAuthorization;
+    }
+
+    private IActionResult? RequireAdmin(HttpRequest req)
+    {
+        return _adminAuthorization.IsAdmin(req)
+            ? null
+            : new UnauthorizedObjectResult("Admin authorization required.");
     }
 
     /// <summary>
@@ -36,6 +45,8 @@ public class FridayGroupFunction
     public async Task<IActionResult> GetAllGroups(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "mgmt/friday-groups")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var groups = await _fridayGroupService.GetAllGroupsAsync();
         return new OkObjectResult(groups);
     }
@@ -47,6 +58,8 @@ public class FridayGroupFunction
     public async Task<IActionResult> CreateFridayGroup(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/friday-groups")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var request = await req.ReadFromJsonAsync<CreateFridayGroupRequest>();
         if (request == null)
             return new BadRequestObjectResult("Invalid request body");
@@ -69,6 +82,8 @@ public class FridayGroupFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "mgmt/friday-groups/{id:guid}")] HttpRequest req,
         Guid id)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var request = await req.ReadFromJsonAsync<UpdateFridayGroupRequest>();
         if (request == null)
             return new BadRequestObjectResult("Invalid request body");
@@ -89,6 +104,8 @@ public class FridayGroupFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "mgmt/friday-groups/{id:guid}")] HttpRequest req,
         Guid id)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var success = await _fridayGroupService.DeleteAsync(id);
         if (!success)
             return new NotFoundResult();
