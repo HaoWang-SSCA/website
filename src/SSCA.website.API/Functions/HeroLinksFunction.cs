@@ -13,11 +13,23 @@ public class HeroLinksFunction
 {
     private readonly IHeroLinkService _heroLinkService;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IAdminAuthorizationService _adminAuthorization;
 
-    public HeroLinksFunction(IHeroLinkService heroLinkService, IFileStorageService fileStorageService)
+    public HeroLinksFunction(
+        IHeroLinkService heroLinkService,
+        IFileStorageService fileStorageService,
+        IAdminAuthorizationService adminAuthorization)
     {
         _heroLinkService = heroLinkService;
         _fileStorageService = fileStorageService;
+        _adminAuthorization = adminAuthorization;
+    }
+
+    private IActionResult? RequireAdmin(HttpRequest req)
+    {
+        return _adminAuthorization.IsAdmin(req)
+            ? null
+            : new UnauthorizedObjectResult("Admin authorization required.");
     }
 
     /// <summary>
@@ -38,6 +50,8 @@ public class HeroLinksFunction
     public async Task<IActionResult> GetAllLinks(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "mgmt/hero-links")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var links = await _heroLinkService.GetAllLinksAsync();
         return new OkObjectResult(links);
     }
@@ -49,6 +63,8 @@ public class HeroLinksFunction
     public async Task<IActionResult> CreateHeroLink(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/hero-links")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var request = await req.ReadFromJsonAsync<CreateHeroLinkRequest>();
         if (request == null)
             return new BadRequestObjectResult("Invalid request body");
@@ -71,6 +87,8 @@ public class HeroLinksFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "mgmt/hero-links/{id:guid}")] HttpRequest req,
         Guid id)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         var request = await req.ReadFromJsonAsync<UpdateHeroLinkRequest>();
         if (request == null)
             return new BadRequestObjectResult("Invalid request body");
@@ -91,6 +109,8 @@ public class HeroLinksFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "mgmt/hero-links/{id:guid}")] HttpRequest req,
         Guid id)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         // First get the link to check if it has a file to delete
         var link = await _heroLinkService.GetByIdAsync(id);
         if (link == null)
@@ -116,6 +136,8 @@ public class HeroLinksFunction
     public async Task<IActionResult> UploadFile(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mgmt/hero-links/upload")] HttpRequest req)
     {
+        if (RequireAdmin(req) is { } unauthorized) return unauthorized;
+
         if (!req.HasFormContentType || req.Form.Files.Count == 0)
             return new BadRequestObjectResult("No file uploaded");
 
@@ -154,11 +176,28 @@ public class HeroLinksFunction
             ".pdf" => "application/pdf",
             ".jpg" or ".jpeg" => "image/jpeg",
             ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
             ".doc" => "application/msword",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             _ => "application/octet-stream"
         };
 
-        return new FileStreamResult(stream, contentType);
+        var result = new FileStreamResult(stream, contentType);
+
+        // ?download=<filename> forces an attachment download with a friendly file name
+        var downloadName = req.Query["download"].ToString();
+        if (!string.IsNullOrWhiteSpace(downloadName))
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var safeName = new string(downloadName.Where(c => !invalidChars.Contains(c)).ToArray()).Trim();
+            if (string.IsNullOrEmpty(Path.GetExtension(safeName)))
+                safeName += extension;
+            result.FileDownloadName = string.IsNullOrEmpty(Path.GetFileNameWithoutExtension(safeName))
+                ? Path.GetFileName(name)
+                : safeName;
+        }
+
+        return result;
     }
 }

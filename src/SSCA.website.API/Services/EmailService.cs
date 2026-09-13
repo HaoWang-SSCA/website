@@ -59,18 +59,23 @@ public class EmailService : IEmailService
         {
             var smtpHost = _configuration["Smtp:Host"] ?? "smtp.office365.com";
             var smtpPort = int.Parse(_configuration["Smtp:Port"] ?? "587");
-            var smtpUsername = _configuration["Smtp:Username"] ?? "hao.wang@team.ssca-bc.org";
-            var smtpPassword = _configuration["Smtp:Password"] ?? "Skight163#";
-            var fromEmail = _configuration["Smtp:FromEmail"] ?? "hao.wang@team.ssca-bc.org";
+            var smtpUsername = _configuration["Smtp:Username"];
+            var smtpPassword = _configuration["Smtp:Password"];
+            var fromEmail = _configuration["Smtp:FromEmail"] ?? smtpUsername;
             var fromName = _configuration["Smtp:FromName"] ?? "SSCA-BC Website";
             var recipientEmail = _configuration["ContactEmail"] ?? "tech@ssca-bc.org";
 
             // Check if SMTP is configured
-            if (string.IsNullOrEmpty(smtpUsername) || string.IsNullOrEmpty(smtpPassword))
+            if (string.IsNullOrWhiteSpace(smtpUsername) || string.IsNullOrWhiteSpace(smtpPassword))
             {
-                _logger.LogWarning("SMTP not configured. Logging message instead of sending email.");
+                _logger.LogWarning("SMTP is not configured. Logging message instead of sending email.");
                 LogContactMessage(request);
                 return true; // Return true so user sees success (message is logged)
+            }
+
+            if (string.IsNullOrWhiteSpace(fromEmail))
+            {
+                fromEmail = smtpUsername;
             }
 
             // Create the email message

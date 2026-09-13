@@ -59,6 +59,12 @@
                         </div>
 
                         <div class="form-group full-width">
+                            <label for="scripture">经文 Scripture</label>
+                            <InputText id="scripture" @bind-Value="model.Scripture" class="form-control" placeholder="e.g. John 3:16 / 约翰福音 3:16"/>
+                            <ValidationMessage For="@(() => model.Scripture)"/>
+                        </div>
+
+                        <div class="form-group full-width">
                             <label for="videoUrl">视频链接 Video URL</label>
                             <InputText id="videoUrl" @bind-Value="model.VideoUrl" class="form-control" placeholder="https://youtube.com/..."/>
                             <ValidationMessage For="@(() => model.VideoUrl)"/>
@@ -117,6 +123,41 @@
                         </div>
                     </div>
 
+                    <div class="audio-section">
+                        <h3>PPT 文件 PowerPoint File</h3>
+                        @if (!IsNew && existingMeeting != null && !string.IsNullOrEmpty(existingMeeting.PowerPointUrl))
+                        {
+                            <div class="current-audio">
+                                <span class="material-symbols-outlined">slideshow</span>
+                                <a href="@existingMeeting.PowerPointUrl" target="_blank">当前PPT Current PowerPoint</a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(model.PowerPointBlobName))
+                        {
+                            <div class="current-audio success">
+                                <span class="material-symbols-outlined">check_circle</span>
+                                <span>新PPT已上传 New PowerPoint uploaded</span>
+                            </div>
+                        }
+                        <div class="form-group">
+                            <label for="powerPointFile">上传PPT Upload PowerPoint @(IsNew ? "" : "(Optional)")</label>
+                            <InputFile id="powerPointFile" OnChange="HandlePowerPointUpload" accept=".ppt,.pptx"/>
+                            @if (isUploadingPowerPoint)
+                            {
+                                <div class="upload-progress">
+                                    <span class="material-symbols-outlined spinning">progress_activity</span>
+                                    <span>上传中... Uploading...</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(powerPointUploadMessage))
+                            {
+                                <div class="upload-message @(powerPointUploadSuccess ? "success" : "error")">
+                                    @powerPointUploadMessage
+                                </div>
+                            }
+                        </div>
+                    </div>
+
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
                         <div class="alert alert-error">
@@ -154,9 +195,12 @@
     private bool isLoading = true;
     private bool isSaving;
     private bool isUploading;
+    private bool isUploadingPowerPoint;
     private string? errorMessage;
     private string? uploadMessage;
+    private string? powerPointUploadMessage;
     private bool uploadSuccess;
+    private bool powerPointUploadSuccess;
     private List<string> allSpeakers = new();
 
     protected override async Task OnInitializedAsync()
@@ -198,6 +242,7 @@
                     Date = existingMeeting.Date,
                     Speaker = existingMeeting.Speaker,
                     Topic = existingMeeting.Topic,
+                    Scripture = existingMeeting.Scripture,
                     VideoUrl = existingMeeting.VideoUrl,
                     IsGospel = existingMeeting.IsGospel,
                     IsSpecialMeeting = existingMeeting.IsSpecialMeeting
@@ -226,10 +271,12 @@
                     Date = model.Date,
                     Speaker = model.Speaker,
                     Topic = model.Topic,
+                    Scripture = model.Scripture,
                     VideoUrl = model.VideoUrl,
                     IsGospel = model.IsGospel,
                     IsSpecialMeeting = model.IsSpecialMeeting,
-                    AudioBlobName = model.AudioBlobName
+                    AudioBlobName = model.AudioBlobName,
+                    PowerPointBlobName = model.PowerPointBlobName
                 };
                 response = await Http.PostAsJsonAsync("api/mgmt/meetings", createRequest);
             }
@@ -241,10 +288,12 @@
                     Date = model.Date,
                     Speaker = model.Speaker,
                     Topic = model.Topic,
+                    Scripture = model.Scripture,
                     VideoUrl = model.VideoUrl,
                     IsGospel = model.IsGospel,
                     IsSpecialMeeting = model.IsSpecialMeeting,
-                    AudioBlobName = model.AudioBlobName
+                    AudioBlobName = model.AudioBlobName,
+                    PowerPointBlobName = model.PowerPointBlobName
                 };
                 response = await Http.PutAsJsonAsync($"api/mgmt/meetings/{Id}", updateRequest);
             }
@@ -316,6 +365,52 @@
         }
     }
 
+    private async Task HandlePowerPointUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        isUploadingPowerPoint = true;
+        powerPointUploadMessage = null;
+
+        try
+        {
+            // Max 50MB
+            var maxSize = 50 * 1024 * 1024;
+            using var content = new MultipartFormDataContent();
+            using var stream = file.OpenReadStream(maxSize);
+            using var streamContent = new StreamContent(stream);
+            content.Add(streamContent, "file", file.Name);
+
+            var response = await Http.PostAsync("api/mgmt/powerpoint-upload", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<FileUploadResult>();
+                if (result != null)
+                {
+                    model.PowerPointBlobName = result.BlobName;
+                    powerPointUploadSuccess = true;
+                    powerPointUploadMessage = "上传成功! Upload successful!";
+                }
+            }
+            else
+            {
+                powerPointUploadSuccess = false;
+                powerPointUploadMessage = $"上传失败: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            powerPointUploadSuccess = false;
+            powerPointUploadMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isUploadingPowerPoint = false;
+        }
+    }
+
     private void GoBack()
     {
         Navigation.NavigateTo("/mgmt/meetings");
@@ -326,12 +421,15 @@
         public DateTime Date { get; set; } = DateTime.Today;
         public string Speaker { get; set; } = string.Empty;
         public string Topic { get; set; } = string.Empty;
+        [MaxLength(300)] public string? Scripture { get; set; }
         [Url] public string? VideoUrl { get; set; }
         public bool IsGospel { get; set; }
         public bool IsSpecialMeeting { get; set; }
         public string? AudioBlobName { get; set; }
+        public string? PowerPointBlobName { get; set; }
     }
 
     private record AudioUploadResult(string BlobName, string Url);
+    private record FileUploadResult(string BlobName, string Url);
 
 }

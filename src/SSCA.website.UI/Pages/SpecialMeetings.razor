@@ -30,6 +30,10 @@
                         <input type="text" id="topic" @bind="searchTopic" @bind:event="oninput" placeholder="Search by topic..." />
                     </div>
                     <div class="form-group">
+                        <label for="scripture">经文 Scripture</label>
+                        <input type="text" id="scripture" @bind="searchScripture" @bind:event="oninput" placeholder="Search by scripture..." />
+                    </div>
+                    <div class="form-group">
                         <label for="dateFrom">开始日期 From</label>
                         <input type="date" id="dateFrom" @bind="dateFrom" />
                     </div>
@@ -70,6 +74,13 @@
                                 <span class="material-symbols-outlined">person</span>
                                 @meeting.Speaker
                             </p>
+                            @if (!string.IsNullOrWhiteSpace(meeting.Scripture))
+                            {
+                                <p class="meeting-scripture">
+                                    <span class="material-symbols-outlined">menu_book</span>
+                                    @meeting.Scripture
+                                </p>
+                            }
                             <div class="meeting-actions">
                                 @if (!string.IsNullOrEmpty(meeting.AudioUrl))
                                 {
@@ -96,6 +107,13 @@
                                         <span class="material-symbols-outlined">@(expandedVideoIds.Contains(meeting.Id) ? "close" : "play_circle")</span>
                                         @(expandedVideoIds.Contains(meeting.Id) ? "关闭" : "视频")
                                     </button>
+                                }
+                                @if (!string.IsNullOrEmpty(meeting.PowerPointUrl))
+                                {
+                                    <a href="@meeting.PowerPointUrl" target="_blank" class="btn btn-sm btn-outline" title="下载PPT Download PPT">
+                                        <span class="material-symbols-outlined">slideshow</span>
+                                        PPT
+                                    </a>
                                 }
                             </div>
                             @if (!string.IsNullOrEmpty(meeting.VideoUrl) && expandedVideoIds.Contains(meeting.Id))
@@ -145,6 +163,7 @@
     private string? searchSpeaker;
     private List<string> speakers = new();
     private string? searchTopic;
+    private string? searchScripture;
     private DateTime? dateFrom;
     private DateTime? dateTo;
     private HashSet<Guid> expandedVideoIds = new();
@@ -251,6 +270,8 @@
             queryParams.Add($"speaker={Uri.EscapeDataString(searchSpeaker)}");
         if (!string.IsNullOrWhiteSpace(searchTopic))
             queryParams.Add($"topic={Uri.EscapeDataString(searchTopic)}");
+        if (!string.IsNullOrWhiteSpace(searchScripture))
+            queryParams.Add($"scripture={Uri.EscapeDataString(searchScripture)}");
         if (dateFrom.HasValue)
             queryParams.Add($"dateFrom={dateFrom.Value:yyyy-MM-dd}");
         if (dateTo.HasValue)
@@ -268,6 +289,7 @@
     {
         searchSpeaker = null;
         searchTopic = null;
+        searchScripture = null;
         dateFrom = null;
         dateTo = null;
         currentPage = 1;

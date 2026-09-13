@@ -32,7 +32,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Topic)
                 .IsRequired()
                 .HasMaxLength(200);
+            entity.Property(e => e.Scripture)
+                .HasMaxLength(300);
             entity.Property(e => e.AudioBlobName)
+                .HasMaxLength(500);
+            entity.Property(e => e.PowerPointBlobName)
                 .HasMaxLength(500);
             entity.Property(e => e.VideoUrl)
                 .HasMaxLength(500);

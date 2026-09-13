@@ -42,6 +42,9 @@ var host = new HostBuilder()
         // Add FridayGroupService
         services.AddScoped<IFridayGroupService, FridayGroupService>();
 
+        // Add admin authorization
+        services.AddSingleton<IAdminAuthorizationService, AdminAuthorizationService>();
+
         // Add Azure Blob Storage
         services.AddSingleton(sp =>
         {

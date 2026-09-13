@@ -9,6 +9,7 @@ public class MeetingSearchQuery
     public int PageSize { get; set; } = 10;
     public string? Speaker { get; set; }
     public string? Topic { get; set; }
+    public string? Scripture { get; set; }
     public DateTime? DateFrom { get; set; }
     public DateTime? DateTo { get; set; }
 }

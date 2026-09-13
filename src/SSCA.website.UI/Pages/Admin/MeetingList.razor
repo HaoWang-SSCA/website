@@ -25,6 +25,9 @@
                 <div class="form-group">
                     <input type="text" @bind="searchTopic" @bind:event="oninput" placeholder="Search topic..." />
                 </div>
+                <div class="form-group">
+                    <input type="text" @bind="searchScripture" @bind:event="oninput" placeholder="Search scripture..." />
+                </div>
                 <div class="search-actions">
                     <button class="btn btn-primary btn-sm" @onclick="SearchMeetings">搜索</button>
                     <button class="btn btn-secondary btn-sm" @onclick="ClearSearch">清除</button>
@@ -49,6 +52,7 @@
                             <th>日期 Date</th>
                             <th>讲员 Speaker</th>
                             <th>主题 Topic</th>
+                            <th>经文 Scripture</th>
                             <th>类型 Type</th>
                             <th>媒体 Media</th>
                             <th>操作 Actions</th>
@@ -61,6 +65,7 @@
                                 <td>@meeting.Date.ToString("yyyy-MM-dd")</td>
                                 <td>@meeting.Speaker</td>
                                 <td class="topic-cell">@meeting.Topic</td>
+                                <td>@meeting.Scripture</td>
                                 <td>
                                     @if (meeting.IsGospel)
                                     {
@@ -86,6 +91,12 @@
                                     {
                                         <a href="@meeting.VideoUrl" target="_blank" class="media-link" title="Watch Video">
                                             <span class="material-symbols-outlined media-icon">play_circle</span>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(meeting.PowerPointUrl))
+                                    {
+                                        <a href="@meeting.PowerPointUrl" target="_blank" class="media-link" title="Download PowerPoint">
+                                            <span class="material-symbols-outlined media-icon">slideshow</span>
                                         </a>
                                     }
                                 </td>
@@ -152,6 +163,7 @@
     private int currentPage = 1;
     private string? searchSpeaker;
     private string? searchTopic;
+    private string? searchScripture;
     private bool showDeleteConfirm;
     private MessageMeetingDto? meetingToDelete;
 
@@ -186,6 +198,8 @@
             queryParams.Add($"speaker={Uri.EscapeDataString(searchSpeaker)}");
         if (!string.IsNullOrWhiteSpace(searchTopic))
             queryParams.Add($"topic={Uri.EscapeDataString(searchTopic)}");
+        if (!string.IsNullOrWhiteSpace(searchScripture))
+            queryParams.Add($"scripture={Uri.EscapeDataString(searchScripture)}");
         return "?" + string.Join("&", queryParams);
     }
 
@@ -199,6 +213,7 @@
     {
         searchSpeaker = null;
         searchTopic = null;
+        searchScripture = null;
         currentPage = 1;
         await LoadMeetings();
     }
