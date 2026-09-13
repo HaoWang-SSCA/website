@@ -176,11 +176,28 @@ public class HeroLinksFunction
             ".pdf" => "application/pdf",
             ".jpg" or ".jpeg" => "image/jpeg",
             ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
             ".doc" => "application/msword",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             _ => "application/octet-stream"
         };
 
-        return new FileStreamResult(stream, contentType);
+        var result = new FileStreamResult(stream, contentType);
+
+        // ?download=<filename> forces an attachment download with a friendly file name
+        var downloadName = req.Query["download"].ToString();
+        if (!string.IsNullOrWhiteSpace(downloadName))
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var safeName = new string(downloadName.Where(c => !invalidChars.Contains(c)).ToArray()).Trim();
+            if (string.IsNullOrEmpty(Path.GetExtension(safeName)))
+                safeName += extension;
+            result.FileDownloadName = string.IsNullOrEmpty(Path.GetFileNameWithoutExtension(safeName))
+                ? Path.GetFileName(name)
+                : safeName;
+        }
+
+        return result;
     }
 }

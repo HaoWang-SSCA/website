@@ -20,10 +20,23 @@
                         <div class="dynamic-links">
                             @foreach (var link in heroLinks)
                             {
-                                <a href="@GetLinkUrl(link)" target="_blank" rel="noopener noreferrer" class="dynamic-link">
-                                    <span class="material-symbols-outlined">@GetLinkIcon(link)</span>
-                                    <span>@link.Text</span>
-                                </a>
+                                @if (IsImageFile(link))
+                                {
+                                    <a href="@GetDownloadUrl(link)" download="@GetDownloadFileName(link)" class="hero-image-link" title="点击下载 Click to download">
+                                        <img src="@GetLinkUrl(link)" alt="@link.Text" loading="lazy" />
+                                        <span class="hero-image-caption">
+                                            <span class="material-symbols-outlined">download</span>
+                                            <span>@link.Text</span>
+                                        </span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@GetLinkUrl(link)" target="_blank" rel="noopener noreferrer" class="dynamic-link">
+                                        <span class="material-symbols-outlined">@GetLinkIcon(link)</span>
+                                        <span>@link.Text</span>
+                                    </a>
+                                }
                             }
                         </div>
                     }                  
@@ -96,6 +109,48 @@
     .dynamic-link .material-symbols-outlined {
         margin-right: 0.4rem;
         font-size: 1.2rem;
+    }
+
+    .hero-image-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #fbbf24;
+        animation: slideInLeft 0.5s ease-out;
+        transition: transform 0.2s ease;
+    }
+
+    .hero-image-link img {
+        display: block;
+        max-width: 100%;
+        max-height: 360px;
+        object-fit: contain;
+        border-radius: 0.75rem;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        border: 3px solid rgba(255, 255, 255, 0.85);
+    }
+
+    .hero-image-link:hover {
+        transform: translateY(-3px);
+        color: #fde68a;
+    }
+
+    .hero-image-caption {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 1.05rem;
+        font-weight: 500;
+    }
+
+    .hero-image-caption .material-symbols-outlined {
+        font-size: 1.2rem;
+    }
+
+    .hero-image-link:hover .hero-image-caption span:last-child {
+        text-decoration: underline;
     }
 
     .dynamic-link:nth-child(1) { animation-delay: 0s; }
@@ -262,6 +317,26 @@
         }
         return "#";
     }
+
+    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".gif", ".webp"
+    };
+
+    private static bool IsImageFile(HeroLinkDto link) =>
+        string.IsNullOrEmpty(link.ExternalUrl)
+        && !string.IsNullOrEmpty(link.FileBlobName)
+        && ImageExtensions.Contains(System.IO.Path.GetExtension(link.FileBlobName));
+
+    private static string GetDownloadFileName(HeroLinkDto link)
+    {
+        var ext = System.IO.Path.GetExtension(link.FileBlobName);
+        var baseName = string.IsNullOrWhiteSpace(link.Text) ? "download" : link.Text.Trim();
+        return baseName + ext;
+    }
+
+    private string GetDownloadUrl(HeroLinkDto link) =>
+        $"{GetLinkUrl(link)}?download={Uri.EscapeDataString(GetDownloadFileName(link))}";
 
     private string GetLinkIcon(HeroLinkDto link)
     {
