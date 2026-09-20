@@ -73,7 +73,7 @@ module "ssca_website" {
   resource_group_name = "ssca-bc-prod-rg"
 
   # PostgreSQL
-  postgres_host          = "shared-data.postgres.database.azure.com"
+  postgres_host          = "ssca-db.postgres.database.azure.com"
   postgres_port          = 5432
   postgres_database_name = "ssca-prod"
 
